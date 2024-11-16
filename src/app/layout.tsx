@@ -47,10 +47,6 @@ export default function RootLayout({
         <Toaster 
           position="top-center" 
           richColors 
-          closeButton
-          toastOptions={{
-            style: { background: 'var(--background)', color: 'var(--foreground)' },
-          }}
         />
       </body>
     </html>
