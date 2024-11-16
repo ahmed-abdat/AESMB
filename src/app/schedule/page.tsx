@@ -25,25 +25,25 @@ export default function SchedulePage() {
     <main className="min-h-screen pt-20 pb-12">
       <div className="w-full mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Match Schedule</h1>
+          <h1 className="text-3xl font-bold">Calendrier des Matchs</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <IconCalendar className="w-4 h-4" />
-                {selectedRound ? `Round ${selectedRound}` : "Select Round"}
+                {selectedRound ? `Journée ${selectedRound}` : 'Sélectionner une journée'}
                 <IconChevronDown className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setSelectedRound(null)}>
-                All Rounds
+                Toutes les journées
               </DropdownMenuItem>
               {rounds.map((round) => (
                 <DropdownMenuItem
                   key={round.id}
                   onClick={() => setSelectedRound(round.id)}
                 >
-                  Round {round.id}
+                  Journée {round.id}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -59,7 +59,7 @@ export default function SchedulePage() {
             <Card key={round.id}>
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
-                  <span>Round {round.id}</span>
+                  <span>Journée {round.id}</span>
                   <span className="text-muted-foreground text-sm">
                     {round.date}
                   </span>

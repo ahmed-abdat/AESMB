@@ -12,7 +12,7 @@ const tournamentStats = {
   totalMatches: 20,
   totalGoals: 45,
   topScorer: {
-    name: "Player Name",
+    name: "Nom du Joueur",
     team: clubs[0].name,
     goals: 5,
   },
@@ -26,13 +26,11 @@ export default function StandingsPage() {
   const [highlightedTeam, setHighlightedTeam] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get the hash from URL without the # symbol
     const hash = window.location.hash.slice(1);
     if (hash) {
       setHighlightedTeam(hash);
     }
 
-    // Listen for hash changes
     const handleHashChange = () => {
       const newHash = window.location.hash.slice(1);
       setHighlightedTeam(newHash || null);
@@ -46,10 +44,10 @@ export default function StandingsPage() {
     <main className="min-h-screen pt-20 pb-12">
       <div className="w-full mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">League Standings</h1>
+          <h1 className="text-3xl font-bold">Classement du Championnat</h1>
           <div className="flex items-center gap-2 text-muted-foreground">
             <IconTrophy className="w-5 h-5" />
-            <span>2024-2025 Season</span>
+            <span>Saison 2024-2025</span>
           </div>
         </div>
 
@@ -58,15 +56,13 @@ export default function StandingsPage() {
           animate={{ opacity: 1 }}
           className="space-y-8"
         >
-          {/* Main Standings Table */}
           <StandingsTable highlightedTeam={highlightedTeam} />
 
-          {/* Tournament Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Matches
+                  Total des Matchs
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -79,7 +75,7 @@ export default function StandingsPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Goals
+                  Total des Buts
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -92,7 +88,7 @@ export default function StandingsPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Top Scorer
+                  Meilleur Buteur
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -100,8 +96,7 @@ export default function StandingsPage() {
                   {tournamentStats.topScorer.goals}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {tournamentStats.topScorer.name} (
-                  {tournamentStats.topScorer.team})
+                  {tournamentStats.topScorer.name} ({tournamentStats.topScorer.team})
                 </div>
               </CardContent>
             </Card>
@@ -109,7 +104,7 @@ export default function StandingsPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Most Clean Sheets
+                  Clean Sheets
                 </CardTitle>
               </CardHeader>
               <CardContent>
