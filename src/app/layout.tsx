@@ -5,8 +5,16 @@ import type { Metadata } from "next";
 import { Header } from "@/components/Header";
 
 export const metadata: Metadata = {
-  title: 'TourneyTracker - Football Tournament Management',
-  description: 'Track and manage your football tournaments with ease. Real-time standings, team management, and match scheduling.',
+  title: 'Ligue AESMB - Championnat de Football',
+  description: 'Suivez le championnat de football AESMB. Classements en direct, gestion des équipes et calendrier des matchs.',
+  keywords: 'AESMB, football, championnat, tournoi, classement, matchs',
+  authors: [{ name: 'AESMB' }],
+  openGraph: {
+    title: 'Ligue AESMB - Championnat de Football',
+    description: 'Suivez le championnat de football AESMB. Classements en direct, gestion des équipes et calendrier des matchs.',
+    type: 'website',
+    locale: 'fr_FR',
+  },
 };
 
 export default function RootLayout({
@@ -15,11 +23,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar">
+    <html lang="fr">
       <body className={`${roboto.className} ${tajawal.className} min-h-screen`}>
         <Header />  
         {children}
-        <Toaster position="top-center" richColors dir="ltr" />
+        <Toaster 
+          position="top-center" 
+          richColors 
+          closeButton
+          toastOptions={{
+            style: { background: 'var(--background)', color: 'var(--foreground)' },
+          }}
+        />
       </body>
     </html>
   );

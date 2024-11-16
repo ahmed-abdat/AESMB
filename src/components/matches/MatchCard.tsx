@@ -1,7 +1,7 @@
 import { IconClock } from "@tabler/icons-react";
 import { Card } from "../ui/card";
 import Image from "next/image";
-import { clubs } from "@/config/tournament-data";
+import { clubs } from "@/types/tournament-data";
 
 interface MatchCardProps {
   homeTeam: string;
@@ -21,8 +21,8 @@ export function MatchCard({
   matchDate,
 }: MatchCardProps) {
   const isUpcoming = homeScore === undefined && awayScore === undefined;
-  const homeTeamData = clubs.find(club => club.id === homeTeam);
-  const awayTeamData = clubs.find(club => club.id === awayTeam);
+  const homeTeamData = clubs.find((club) => club.id === homeTeam);
+  const awayTeamData = clubs.find((club) => club.id === awayTeam);
 
   if (!homeTeamData || !awayTeamData) return null;
 
@@ -36,18 +36,21 @@ export function MatchCard({
             <span>{matchTime || "20:00"}</span>
           </div>
         </div>
-        
+
         <div className="flex justify-between items-center">
           <div className="flex flex-col items-center gap-2 flex-1">
             <div className="relative w-12 h-12">
               <Image
                 src={homeTeamData.logo}
                 alt={homeTeamData.name}
-                fill
+                width={48}
+                height={48}
                 className="object-contain"
               />
             </div>
-            <span className="font-semibold text-sm text-center">{homeTeamData.name}</span>
+            <span className="font-semibold text-sm text-center">
+              {homeTeamData.name}
+            </span>
           </div>
 
           <div className="px-4 py-2 bg-muted rounded-xl min-w-[80px] text-center mx-4">
@@ -63,18 +66,21 @@ export function MatchCard({
               <Image
                 src={awayTeamData.logo}
                 alt={awayTeamData.name}
-                fill
+                width={48}
+                height={48}
                 className="object-contain"
               />
             </div>
-            <span className="font-semibold text-sm text-center">{awayTeamData.name}</span>
+            <span className="font-semibold text-sm text-center">
+              {awayTeamData.name}
+            </span>
           </div>
         </div>
-        
+
         <div className="text-center text-sm text-muted-foreground border-t pt-2">
           {matchDate}
         </div>
       </div>
     </Card>
   );
-} 
+}

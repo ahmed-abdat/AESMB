@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { IconCalendar } from "@tabler/icons-react";
 import { MatchCard } from "@/components/matches/MatchCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { rounds } from "@/config/tournament-data";
+import { rounds } from "@/types/tournament-data";
 
 export default function SchedulePage() {
   return (
@@ -29,7 +29,9 @@ export default function SchedulePage() {
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                   <span>Round {round.id}</span>
-                  <span className="text-muted-foreground text-sm">{round.date}</span>
+                  <span className="text-muted-foreground text-sm">
+                    {round.date}
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -51,4 +53,4 @@ export default function SchedulePage() {
       </div>
     </main>
   );
-} 
+}

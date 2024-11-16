@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { IconTrophy, IconUsers } from "@tabler/icons-react";
-import { clubs } from "@/config/tournament-data";
+import { clubs } from "@/types/tournament-data";
 
 // Sample data for round progress
 const roundProgress = {
@@ -13,7 +13,7 @@ const roundProgress = {
   totalRounds: 5,
   matchesPlayed: 4,
   totalMatches: 20,
-  topScorer: "Player Name (Team) - 3 goals"
+  topScorer: "Player Name (Team) - 3 goals",
 };
 
 export default function GroupsPage() {
@@ -26,9 +26,9 @@ export default function GroupsPage() {
             Round {roundProgress.currentRound} of {roundProgress.totalRounds}
           </div>
         </div>
-        
+
         {/* Tournament Progress */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="mb-8"
@@ -40,18 +40,24 @@ export default function GroupsPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <p className="text-sm text-muted-foreground">Matches Played</p>
+                  <p className="text-sm text-muted-foreground">
+                    Matches Played
+                  </p>
                   <p className="text-2xl font-bold">
                     {roundProgress.matchesPlayed} / {roundProgress.totalMatches}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Current Round</p>
-                  <p className="text-2xl font-bold">{roundProgress.currentRound}</p>
+                  <p className="text-2xl font-bold">
+                    {roundProgress.currentRound}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Top Scorer</p>
-                  <p className="text-lg font-medium">{roundProgress.topScorer}</p>
+                  <p className="text-lg font-medium">
+                    {roundProgress.topScorer}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -59,7 +65,7 @@ export default function GroupsPage() {
         </motion.div>
 
         {/* Teams Grid */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -97,4 +103,4 @@ export default function GroupsPage() {
       </div>
     </main>
   );
-} 
+}

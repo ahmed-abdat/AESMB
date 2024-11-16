@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
 import { motion } from "framer-motion";
 import { StandingsTable } from "@/components/sections/StandingsTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IconTrophy } from "@tabler/icons-react";
-import { clubs } from "@/config/tournament-data";
+import { clubs } from "@/types/tournament-data";
 
 // Sample stats - replace with real calculations later
 const tournamentStats = {
@@ -13,12 +13,12 @@ const tournamentStats = {
   topScorer: {
     name: "Player Name",
     team: clubs[0].name,
-    goals: 5
+    goals: 5,
   },
   mostCleanSheets: {
     team: clubs[1].name,
-    count: 3
-  }
+    count: 3,
+  },
 };
 
 export default function StandingsPage() {
@@ -33,7 +33,7 @@ export default function StandingsPage() {
           </div>
         </div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="space-y-8"
@@ -50,7 +50,9 @@ export default function StandingsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{tournamentStats.totalMatches}</div>
+                <div className="text-2xl font-bold">
+                  {tournamentStats.totalMatches}
+                </div>
               </CardContent>
             </Card>
 
@@ -61,7 +63,9 @@ export default function StandingsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{tournamentStats.totalGoals}</div>
+                <div className="text-2xl font-bold">
+                  {tournamentStats.totalGoals}
+                </div>
               </CardContent>
             </Card>
 
@@ -72,9 +76,12 @@ export default function StandingsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{tournamentStats.topScorer.goals}</div>
+                <div className="text-2xl font-bold">
+                  {tournamentStats.topScorer.goals}
+                </div>
                 <div className="text-sm text-muted-foreground">
-                  {tournamentStats.topScorer.name} ({tournamentStats.topScorer.team})
+                  {tournamentStats.topScorer.name} (
+                  {tournamentStats.topScorer.team})
                 </div>
               </CardContent>
             </Card>
@@ -86,7 +93,9 @@ export default function StandingsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{tournamentStats.mostCleanSheets.count}</div>
+                <div className="text-2xl font-bold">
+                  {tournamentStats.mostCleanSheets.count}
+                </div>
                 <div className="text-sm text-muted-foreground">
                   {tournamentStats.mostCleanSheets.team}
                 </div>
@@ -97,4 +106,4 @@ export default function StandingsPage() {
       </div>
     </main>
   );
-} 
+}

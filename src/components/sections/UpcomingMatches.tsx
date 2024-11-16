@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { MatchCard } from '../matches/MatchCard';
-import { rounds } from '@/config/tournament-data';
+import { motion } from "framer-motion";
+import { MatchCard } from "../matches/MatchCard";
+import { rounds } from "@/types/tournament-data";
 
 export function UpcomingMatches() {
   // Get the next round that hasn't been played yet
@@ -35,4 +35,4 @@ export function UpcomingMatches() {
       </div>
     </section>
   );
-} 
+}
