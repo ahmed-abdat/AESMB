@@ -202,6 +202,8 @@ You are building a web application for personal use to track the progress of foo
 
 ---
 
+
+
 ## Styling Guidelines
 
 - **Tailwind CSS**:

@@ -26,7 +26,7 @@ export function Hero() {
           </div>
           
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Suivez 5 clubs qui s'affrontent sur 5 tours dans le tournoi de football le plus passionnant.
+            Suivez 5 clubs qui s&apos;affrontent sur 5 tours dans le tournoi de football le plus passionnant.
             Restez à jour avec les matchs, les classements et les résultats.
           </p>
 
