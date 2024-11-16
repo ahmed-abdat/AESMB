@@ -48,7 +48,7 @@ const standings = [
     points: 0,
   },
   {
-    team: "calemptus",
+    team: "caleptus",
     played: 0,
     won: 0,
     drawn: 0,
@@ -71,12 +71,15 @@ const standings = [
   },
 ].sort((a, b) => b.points - a.points || b.gd - a.gd);
 
-export function StandingsTable() {
+interface StandingsTableProps {
+  highlightedTeam?: string | null;
+}
+
+export function StandingsTable({ highlightedTeam }: StandingsTableProps) {
   return (
-    <section className="py-12 bg-muted/50">
-      <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+    <section className="">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
@@ -108,7 +111,14 @@ export function StandingsTable() {
                     if (!teamData) return null;
 
                     return (
-                      <TableRow key={team.team}>
+                      <TableRow 
+                        key={team.team}
+                        className={
+                          highlightedTeam === team.team 
+                            ? "bg-muted/50 transition-colors duration-300" 
+                            : ""
+                        }
+                      >
                         <TableCell>{index + 1}</TableCell>
                         <TableCell className="font-medium">
                           {teamData.name}
@@ -138,8 +148,7 @@ export function StandingsTable() {
               </Table>
             </CardContent>
           </Card>
-        </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 }

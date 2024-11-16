@@ -5,6 +5,7 @@ import { StandingsTable } from "@/components/sections/StandingsTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IconTrophy } from "@tabler/icons-react";
 import { clubs } from "@/types/tournament-data";
+import { useEffect, useState } from "react";
 
 // Sample stats - replace with real calculations later
 const tournamentStats = {
@@ -22,9 +23,28 @@ const tournamentStats = {
 };
 
 export default function StandingsPage() {
+  const [highlightedTeam, setHighlightedTeam] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get the hash from URL without the # symbol
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      setHighlightedTeam(hash);
+    }
+
+    // Listen for hash changes
+    const handleHashChange = () => {
+      const newHash = window.location.hash.slice(1);
+      setHighlightedTeam(newHash || null);
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   return (
     <main className="min-h-screen pt-20 pb-12">
-      <div className="container">
+      <div className="w-full mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">League Standings</h1>
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -39,7 +59,7 @@ export default function StandingsPage() {
           className="space-y-8"
         >
           {/* Main Standings Table */}
-          <StandingsTable />
+          <StandingsTable highlightedTeam={highlightedTeam} />
 
           {/* Tournament Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

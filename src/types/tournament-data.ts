@@ -15,8 +15,8 @@ export const clubs = [
     logo: "/logo/ehil_dar.jpg"
   },
   {
-    id: "calemptus",
-    name: "Calemptus",
+    id: "caleptus",
+    name: "Caleptus",
     logo: "/logo/Calemptus.jpg"
   },
   {
@@ -31,50 +31,50 @@ export const rounds = [
     id: 1,
     date: "16 Nov",
     matches: [
-      { homeTeam: "fc-char7e", awayTeam: "fc-madrid" },
-      { homeTeam: "fc-ehil-dar", awayTeam: "calemptus" },
-      { homeTeam: "pk-asc", awayTeam: "fc-char7e" },
-      { homeTeam: "fc-madrid", awayTeam: "fc-ehil-dar" }
+      { homeTeam: "fc-char7e", awayTeam: "fc-madrid", time: "21:00" },
+      { homeTeam: "fc-ehil-dar", awayTeam: "caleptus", time: "21:00" },
+      { homeTeam: "pk-asc", awayTeam: "fc-char7e", time: "21:45" },
+      { homeTeam: "fc-madrid", awayTeam: "fc-ehil-dar", time: "21:45" }
     ]
   },
   {
     id: 2,
     date: "23 Nov",
     matches: [
-      { homeTeam: "calemptus", awayTeam: "pk-asc" },
-      { homeTeam: "fc-char7e", awayTeam: "fc-ehil-dar" },
-      { homeTeam: "fc-madrid", awayTeam: "calemptus" },
-      { homeTeam: "fc-ehil-dar", awayTeam: "pk-asc" }
+      { homeTeam: "caleptus", awayTeam: "pk-asc", time: "21:00" },
+      { homeTeam: "fc-char7e", awayTeam: "fc-ehil-dar", time: "21:00" },
+      { homeTeam: "fc-madrid", awayTeam: "caleptus", time: "21:45" },
+      { homeTeam: "fc-ehil-dar", awayTeam: "pk-asc", time: "21:45" }
     ]
   },
   {
     id: 3,
     date: "30 Nov",
     matches: [
-      { homeTeam: "fc-char7e", awayTeam: "calemptus" },
-      { homeTeam: "fc-madrid", awayTeam: "pk-asc" },
-      { homeTeam: "fc-char7e", awayTeam: "fc-madrid" },
-      { homeTeam: "fc-ehil-dar", awayTeam: "calemptus" }
+      { homeTeam: "fc-char7e", awayTeam: "caleptus", time: "21:00" },
+      { homeTeam: "fc-madrid", awayTeam: "pk-asc", time: "21:00" },
+      { homeTeam: "fc-char7e", awayTeam: "fc-madrid", time: "21:45" },
+      { homeTeam: "fc-ehil-dar", awayTeam: "caleptus", time: "21:45" }
     ]
   },
   {
     id: 4,
     date: "14 Dec",
     matches: [
-      { homeTeam: "pk-asc", awayTeam: "fc-char7e" },
-      { homeTeam: "fc-madrid", awayTeam: "fc-ehil-dar" },
-      { homeTeam: "calemptus", awayTeam: "pk-asc" },
-      { homeTeam: "fc-char7e", awayTeam: "fc-ehil-dar" }
+      { homeTeam: "pk-asc", awayTeam: "fc-char7e", time: "21:00" },
+      { homeTeam: "fc-madrid", awayTeam: "fc-ehil-dar", time: "21:00" },
+      { homeTeam: "caleptus", awayTeam: "pk-asc", time: "21:45" },
+      { homeTeam: "fc-char7e", awayTeam: "fc-ehil-dar", time: "21:45" }
     ]
   },
   {
     id: 5,
     date: "21 Dec",
     matches: [
-      { homeTeam: "fc-madrid", awayTeam: "calemptus" },
-      { homeTeam: "fc-madrid", awayTeam: "pk-asc" },
-      { homeTeam: "fc-char7e", awayTeam: "calemptus" },
-      { homeTeam: "fc-madrid", awayTeam: "pk-asc" }
+      { homeTeam: "fc-madrid", awayTeam: "caleptus", time: "21:00" },
+      { homeTeam: "fc-ehil-dar", awayTeam: "pk-asc", time: "21:00" },
+      { homeTeam: "fc-char7e", awayTeam: "caleptus", time: "21:45" },
+      { homeTeam: "fc-madrid", awayTeam: "pk-asc", time: "21:45" }
     ]
   }
 ]; 

@@ -27,7 +27,7 @@ export function UpcomingMatches() {
                 homeTeam={match.homeTeam}
                 awayTeam={match.awayTeam}
                 matchDate={nextRound.date}
-                matchTime="20:00"
+                matchTime={match.time}
               />
             ))}
           </div>

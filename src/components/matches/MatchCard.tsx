@@ -33,7 +33,7 @@ export function MatchCard({
           <span>AESMB League</span>
           <div className="flex items-center gap-1">
             <IconClock className="w-4 h-4" />
-            <span>{matchTime || "20:00"}</span>
+            <span>{matchTime || "21:00"}</span>
           </div>
         </div>
 

@@ -11,7 +11,7 @@ const menuItems = [
   { href: '/schedule', label: 'Calendrier' },
   { href: '/statistics', label: 'Statistiques' },
   { href: '/standings', label: 'Classement' },
-  { href: '/groups', label: 'Équipes' },
+  { href: '/teams', label: 'Équipes' },
   { href: '/results', label: 'Résultats' },
 ];
 

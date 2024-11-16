@@ -27,7 +27,7 @@ const statistics = {
 export default function StatisticsPage() {
   return (
     <main className="min-h-screen pt-20 pb-12">
-      <div className="container">
+      <div className="w-full mx-auto px-4 md:px-8">
         <h1 className="text-3xl font-bold mb-8">Tournament Statistics</h1>
 
         <motion.div

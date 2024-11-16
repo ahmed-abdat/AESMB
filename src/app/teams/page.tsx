@@ -19,7 +19,7 @@ const roundProgress = {
 export default function GroupsPage() {
   return (
     <main className="min-h-screen pt-20 pb-12">
-      <div className="container">
+      <div className="w-full mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Tournament Overview</h1>
           <div className="text-sm text-muted-foreground">

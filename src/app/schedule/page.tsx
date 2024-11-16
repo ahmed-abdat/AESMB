@@ -2,21 +2,52 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { IconCalendar } from "@tabler/icons-react";
+import { IconCalendar, IconChevronDown } from "@tabler/icons-react";
 import { MatchCard } from "@/components/matches/MatchCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { rounds } from "@/types/tournament-data";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function SchedulePage() {
+  const [selectedRound, setSelectedRound] = useState<number | null>(null);
+
+  const filteredRounds = selectedRound
+    ? rounds.filter((round) => round.id === selectedRound)
+    : rounds;
+
   return (
     <main className="min-h-screen pt-20 pb-12">
-      <div className="container">
+      <div className="w-full mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Match Schedule</h1>
-          <Button variant="outline" className="gap-2">
-            <IconCalendar className="w-4 h-4" />
-            Select Round
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <IconCalendar className="w-4 h-4" />
+                {selectedRound ? `Round ${selectedRound}` : "Select Round"}
+                <IconChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSelectedRound(null)}>
+                All Rounds
+              </DropdownMenuItem>
+              {rounds.map((round) => (
+                <DropdownMenuItem
+                  key={round.id}
+                  onClick={() => setSelectedRound(round.id)}
+                >
+                  Round {round.id}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <motion.div
@@ -24,7 +55,7 @@ export default function SchedulePage() {
           animate={{ opacity: 1 }}
           className="space-y-8"
         >
-          {rounds.map((round) => (
+          {filteredRounds.map((round) => (
             <Card key={round.id}>
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
@@ -42,7 +73,7 @@ export default function SchedulePage() {
                       homeTeam={match.homeTeam}
                       awayTeam={match.awayTeam}
                       matchDate={round.date}
-                      matchTime="20:00"
+                      matchTime={match.time}
                     />
                   ))}
                 </div>
