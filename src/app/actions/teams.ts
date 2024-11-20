@@ -375,4 +375,27 @@ export async function getTeam(teamId: string) {
       },
     };
   }
+}
+
+export async function getTeams() {
+  try {
+    const teamsRef = collection(db, "teams");
+    const querySnapshot = await getDocs(teamsRef);
+    
+    const teams = querySnapshot.docs.map(doc => 
+      convertFirestoreDataToTeam(doc.id, doc.data())
+    );
+
+    return { success: true, teams };
+  } catch (error) {
+    console.error("Error fetching teams:", error);
+    return {
+      success: false,
+      error: {
+        message: "Erreur lors du chargement des équipes",
+        code: "unknown" as const,
+      },
+      teams: []
+    };
+  }
 } 

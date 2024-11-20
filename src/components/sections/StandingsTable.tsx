@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
   Table,
   TableBody,
@@ -8,147 +7,69 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { clubs } from "@/types/tournament-data";
-
-// Sample standings data - replace with real calculations later
-const standings = [
-  {
-    team: "fc-char7e",
-    played: 0,
-    won: 0,
-    drawn: 0,
-    lost: 0,
-    gf: 0,
-    ga: 0,
-    gd: 0,
-    points: 0,
-  },
-  {
-    team: "fc-madrid",
-    played: 0,
-    won: 0,
-    drawn: 0,
-    lost: 0,
-    gf: 0,
-    ga: 0,
-    gd: 0,
-    points: 0,
-  },
-  {
-    team: "fc-ehil-dar",
-    played: 0,
-    won: 0,
-    drawn: 0,
-    lost: 0,
-    gf: 0,
-    ga: 0,
-    gd: 0,
-    points: 0,
-  },
-  {
-    team: "caleptus",
-    played: 0,
-    won: 0,
-    drawn: 0,
-    lost: 0,
-    gf: 0,
-    ga: 0,
-    gd: 0,
-    points: 0,
-  },
-  {
-    team: "pk-asc",
-    played: 0,
-    won: 0,
-    drawn: 0,
-    lost: 0,
-    gf: 0,
-    ga: 0,
-    gd: 0,
-    points: 0,
-  },
-].sort((a, b) => b.points - a.points || b.gd - a.gd);
+} from "@/components/ui/table";
+import { Standing } from "@/types/season";
+import { Team } from "@/types/team";
 
 interface StandingsTableProps {
-  highlightedTeam?: string | null;
+  standings: Standing[];
+  teams: Team[];
 }
 
-export function StandingsTable({ highlightedTeam }: StandingsTableProps) {
+export function StandingsTable({ standings, teams }: StandingsTableProps) {
   return (
-    <section className="">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Classement du Championnat</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">#</TableHead>
-                    <TableHead>Équipe</TableHead>
-                    <TableHead className="text-center">MJ</TableHead>
-                    <TableHead className="text-center">V</TableHead>
-                    <TableHead className="text-center">N</TableHead>
-                    <TableHead className="text-center">D</TableHead>
-                    <TableHead className="text-center">BP</TableHead>
-                    <TableHead className="text-center">BC</TableHead>
-                    <TableHead className="text-center">DB</TableHead>
-                    <TableHead className="text-center">Pts</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {standings.map((team, index) => {
-                    const teamData = clubs.find(
-                      (club) => club.id === team.team
-                    );
-                    if (!teamData) return null;
-
-                    return (
-                      <TableRow 
-                        key={team.team}
-                        className={
-                          highlightedTeam === team.team 
-                            ? "bg-muted/50 transition-colors duration-300" 
-                            : ""
-                        }
-                      >
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell className="font-medium">
-                          {teamData.name}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {team.played}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {team.won}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {team.drawn}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {team.lost}
-                        </TableCell>
-                        <TableCell className="text-center">{team.gf}</TableCell>
-                        <TableCell className="text-center">{team.ga}</TableCell>
-                        <TableCell className="text-center">{team.gd}</TableCell>
-                        <TableCell className="text-center font-bold">
-                          {team.points}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-      </motion.div>
-    </section>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-12">Pos</TableHead>
+            <TableHead>Équipe</TableHead>
+            <TableHead className="text-center">MJ</TableHead>
+            <TableHead className="text-center">G</TableHead>
+            <TableHead className="text-center">N</TableHead>
+            <TableHead className="text-center">P</TableHead>
+            <TableHead className="text-center">BP</TableHead>
+            <TableHead className="text-center">BC</TableHead>
+            <TableHead className="text-center">DB</TableHead>
+            <TableHead className="text-center">Pts</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {standings.map((standing) => {
+            const team = teams.find((t) => t.id === standing.stats.teamId);
+            return (
+              <TableRow key={standing.stats.teamId}>
+                <TableCell className="font-medium">
+                  {standing.position}
+                </TableCell>
+                <TableCell className="font-medium">{team?.name}</TableCell>
+                <TableCell className="text-center">
+                  {standing.stats.played}
+                </TableCell>
+                <TableCell className="text-center">{standing.stats.won}</TableCell>
+                <TableCell className="text-center">
+                  {standing.stats.drawn}
+                </TableCell>
+                <TableCell className="text-center">
+                  {standing.stats.lost}
+                </TableCell>
+                <TableCell className="text-center">
+                  {standing.stats.goalsFor}
+                </TableCell>
+                <TableCell className="text-center">
+                  {standing.stats.goalsAgainst}
+                </TableCell>
+                <TableCell className="text-center">
+                  {standing.stats.goalDifference}
+                </TableCell>
+                <TableCell className="text-center font-bold">
+                  {standing.stats.points}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

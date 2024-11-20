@@ -1,84 +1,60 @@
-import { IconClock } from "@tabler/icons-react";
+"use client";
+
 import { Card } from "../ui/card";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { useTeam } from "@/hooks/useTeam";
 import Image from "next/image";
-import { clubs } from "@/types/tournament-data";
 
 interface MatchCardProps {
-  homeTeam: string;
-  awayTeam: string;
-  homeScore?: number;
-  awayScore?: number;
-  matchTime: string;
-  matchDate: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  matchDate: Date;
+  status: 'scheduled' | 'completed' | 'cancelled';
 }
 
-export function MatchCard({
-  homeTeam,
-  awayTeam,
-  homeScore,
-  awayScore,
-  matchTime,
-  matchDate,
-}: MatchCardProps) {
-  const isUpcoming = homeScore === undefined && awayScore === undefined;
-  const homeTeamData = clubs.find((club) => club.id === homeTeam);
-  const awayTeamData = clubs.find((club) => club.id === awayTeam);
+export function MatchCard({ homeTeamId, awayTeamId, matchDate, status }: MatchCardProps) {
+  const { team: homeTeam } = useTeam(homeTeamId);
+  const { team: awayTeam } = useTeam(awayTeamId);
 
-  if (!homeTeamData || !awayTeamData) return null;
+  if (!homeTeam || !awayTeam) {
+    return null; // or loading state
+  }
 
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow">
-      <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center text-sm text-muted-foreground">
-          <span>AESMB League</span>
-          <div className="flex items-center gap-1">
-            <IconClock className="w-4 h-4" />
-            <span>{matchTime || "21:00"}</span>
-          </div>
-        </div>
-
+    <Card className="p-3 md:p-4">
+      <div className="flex flex-col space-y-3 md:space-y-4">
         <div className="flex justify-between items-center">
-          <div className="flex flex-col items-center gap-2 flex-1">
-            <div className="relative w-12 h-12">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="relative w-6 h-6 md:w-8 md:h-8">
               <Image
-                src={homeTeamData.logo}
-                alt={homeTeamData.name}
-                width={48}
-                height={48}
+                src={homeTeam.logo}
+                alt={homeTeam.name}
+                fill
+                sizes="(max-width: 768px) 24px, 32px"
                 className="object-contain"
+                priority
               />
             </div>
-            <span className="font-semibold text-sm text-center">
-              {homeTeamData.name}
-            </span>
+            <span className="text-sm md:text-base font-semibold">{homeTeam.name}</span>
           </div>
-
-          <div className="px-4 py-2 bg-muted rounded-xl min-w-[80px] text-center mx-4">
-            {isUpcoming ? (
-              <span className="text-sm font-medium">VS</span>
-            ) : (
-              <span className="font-bold text-lg">{`${homeScore} - ${awayScore}`}</span>
-            )}
-          </div>
-
-          <div className="flex flex-col items-center gap-2 flex-1">
-            <div className="relative w-12 h-12">
+          <span className="text-sm md:text-base">vs</span>
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <span className="text-sm md:text-base font-semibold">{awayTeam.name}</span>
+            <div className="relative w-6 h-6 md:w-8 md:h-8">
               <Image
-                src={awayTeamData.logo}
-                alt={awayTeamData.name}
-                width={48}
-                height={48}
+                src={awayTeam.logo}
+                alt={awayTeam.name}
+                fill
+                sizes="(max-width: 768px) 24px, 32px"
                 className="object-contain"
+                priority
               />
             </div>
-            <span className="font-semibold text-sm text-center">
-              {awayTeamData.name}
-            </span>
           </div>
         </div>
-
-        <div className="text-center text-sm text-muted-foreground border-t pt-2">
-          {matchDate}
+        <div className="text-xs md:text-sm text-muted-foreground text-center">
+          {format(matchDate, "d MMMM yyyy 'à' HH'h'mm", { locale: fr })}
         </div>
       </div>
     </Card>

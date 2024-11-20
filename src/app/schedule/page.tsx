@@ -1,86 +1,43 @@
-"use client";
+import { getCurrentSeason } from "@/app/actions/seasons";
+import { ScheduleSection } from "@/components/sections/ScheduleSection";
+import { Suspense } from "react";
+import { IconCalendar } from "@tabler/icons-react";
 
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { IconCalendar, IconChevronDown } from "@tabler/icons-react";
-import { MatchCard } from "@/components/matches/MatchCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { rounds } from "@/types/tournament-data";
-import { useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+export default async function SchedulePage() {
+  const { success, season } = await getCurrentSeason();
 
-export default function SchedulePage() {
-  const [selectedRound, setSelectedRound] = useState<number | null>(null);
-
-  const filteredRounds = selectedRound
-    ? rounds.filter((round) => round.id === selectedRound)
-    : rounds;
+  if (!success || !season) {
+    return (
+      <main className="min-h-screen pt-16">
+        <div className="px-4 md:px-8">
+          <h1 className="text-2xl md:text-3xl font-bold">Aucune saison trouvée</h1>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <main className="min-h-screen pt-20 pb-12">
-      <div className="w-full mx-auto px-4 md:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Calendrier des Matchs</h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <IconCalendar className="w-4 h-4" />
-                {selectedRound ? `Journée ${selectedRound}` : 'Sélectionner une journée'}
-                <IconChevronDown className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSelectedRound(null)}>
-                Toutes les journées
-              </DropdownMenuItem>
-              {rounds.map((round) => (
-                <DropdownMenuItem
-                  key={round.id}
-                  onClick={() => setSelectedRound(round.id)}
-                >
-                  Journée {round.id}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+    <main className="min-h-screen pt-16">
+      <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="flex h-16 md:h-20 items-center px-4 md:px-8">
+          <div className="flex items-center gap-2 font-bold">
+            <IconCalendar className="h-5 w-5 md:h-6 md:w-6" />
+            <h1 className="text-lg md:text-2xl">Calendrier des Matchs</h1>
+          </div>
+          <span className="ml-auto text-sm md:text-base text-muted-foreground">
+            Saison {season.name}
+          </span>
         </div>
+      </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-8"
+      <div className="py-4 md:py-8 px-4 md:px-8">
+        <Suspense
+          fallback={
+            <div className="text-center py-8">Chargement du calendrier...</div>
+          }
         >
-          {filteredRounds.map((round) => (
-            <Card key={round.id}>
-              <CardHeader>
-                <CardTitle className="flex justify-between items-center">
-                  <span>Journée {round.id}</span>
-                  <span className="text-muted-foreground text-sm">
-                    {round.date}
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                  {round.matches.map((match, matchIndex) => (
-                    <MatchCard
-                      key={matchIndex}
-                      homeTeam={match.homeTeam}
-                      awayTeam={match.awayTeam}
-                      matchDate={round.date}
-                      matchTime={match.time}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </motion.div>
+          <ScheduleSection season={season} />
+        </Suspense>
       </div>
     </main>
   );

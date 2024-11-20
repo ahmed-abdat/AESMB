@@ -98,8 +98,7 @@ export function MatchResultDialog({
     setIsLoading(true);
     try {
       const result = await updateMatchResult(seasonId, roundId, match.id, {
-        ...values,
-        status: 'completed' as const,
+        ...values
       });
 
       if (result.success) {

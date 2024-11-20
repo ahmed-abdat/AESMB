@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Season, Round, Match, TeamStats, Standing } from "@/types/season";
+import { Season, Round, Match, Standing } from "@/types/season";
 import { Team } from "@/types/team";
 import {
   Card,
@@ -43,7 +43,20 @@ export function SeasonStandings({ season, teams, onUpdate }: SeasonStandingsProp
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
 
+  console.log('Season data:', {
+    rounds: season.rounds.map(round => ({
+      number: round.number,
+      matches: round.matches.map(match => ({
+        homeTeamId: match.homeTeamId,
+        awayTeamId: match.awayTeamId,
+        status: match.status,
+        result: match.result
+      }))
+    }))
+  });
+  
   const standings = calculateStandings(season, teams);
+  console.log('Calculated standings:', standings);
 
   const handleEditResult = (round: Round, match: Match) => {
     setSelectedRound(round);
@@ -160,16 +173,20 @@ export function SeasonStandings({ season, teams, onUpdate }: SeasonStandingsProp
                         <div className="flex-1 text-center">
                           <p className="font-medium">{homeTeam?.name}</p>
                           <p className="text-2xl font-bold">
-                            {match.result?.homeScore ?? "-"}
+                            {match.status === 'completed' ? match.result?.homeScore : "-"}
                           </p>
                         </div>
                         <div className="px-4">
                           <p className="text-sm text-muted-foreground">VS</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {match.status === 'completed' ? 'Terminé' : 
+                             match.status === 'cancelled' ? 'Annulé' : 'Programmé'}
+                          </p>
                         </div>
                         <div className="flex-1 text-center">
                           <p className="font-medium">{awayTeam?.name}</p>
                           <p className="text-2xl font-bold">
-                            {match.result?.awayScore ?? "-"}
+                            {match.status === 'completed' ? match.result?.awayScore : "-"}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -180,7 +197,7 @@ export function SeasonStandings({ season, teams, onUpdate }: SeasonStandingsProp
                           >
                             <IconEdit className="w-4 h-4" />
                           </Button>
-                          {match.result && (
+                          {match.status === 'completed' && (
                             <Button
                               variant="outline"
                               size="sm"

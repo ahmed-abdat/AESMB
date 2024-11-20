@@ -17,27 +17,18 @@ export interface SeasonFormData {
 export interface MatchResult {
   homeScore: number;
   awayScore: number;
-  status: 'scheduled' | 'completed' | 'cancelled';
-  scorers?: {
-    homeTeam: { playerId: string; goals: number }[];
-    awayTeam: { playerId: string; goals: number }[];
+  stats: {
+    homeTeam: MatchStats;
+    awayTeam: MatchStats;
   };
-  stats?: {
-    homeTeam: {
-      possession: number;
-      shots: number;
-      shotsOnTarget: number;
-      corners: number;
-      fouls: number;
-    };
-    awayTeam: {
-      possession: number;
-      shots: number;
-      shotsOnTarget: number;
-      corners: number;
-      fouls: number;
-    };
-  };
+}
+
+export interface MatchStats {
+  possession: number;
+  shots: number;
+  shotsOnTarget: number;
+  corners: number;
+  fouls: number;
 }
 
 export interface Match {
@@ -45,6 +36,7 @@ export interface Match {
   homeTeamId: string;
   awayTeamId: string;
   date: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
   result?: MatchResult;
 }
 
@@ -91,7 +83,7 @@ export interface SeasonFirestore {
   pointsSystem: PointsSystem;
   teams: string[];
   rounds: Round[];
-  createdAt: Timestamp;
+  createdAt?: Timestamp;
 }
 
 export const DEFAULT_POINTS_SYSTEM: PointsSystem = {

@@ -16,7 +16,6 @@ import {
 } from "firebase/firestore";
 import { SeasonFormData, SeasonFirestore, DEFAULT_POINTS_SYSTEM } from "@/types/season";
 import { isAfter, isBefore, startOfToday } from "date-fns";
-import { Team } from "@/types/team";
 import { convertFirestoreDataToTeam } from "@/types/team";
 
 export async function createSeason(data: SeasonFormData) {
@@ -484,7 +483,6 @@ interface UpdateMatchResultData {
       fouls: number;
     };
   };
-  status: 'completed';
 }
 
 export async function updateMatchResult(
@@ -522,14 +520,14 @@ export async function updateMatchResult(
       };
     }
 
-    // Update match result
+    // Update match with result and status
     const updatedMatch = {
       ...rounds[roundIndex].matches[matchIndex],
+      status: 'completed' as const,
       result: {
         homeScore: data.homeScore,
         awayScore: data.awayScore,
         stats: data.stats,
-        status: data.status,
       },
     };
 
@@ -580,9 +578,12 @@ export async function resetMatchResult(seasonId: string, roundId: string, matchI
       };
     }
 
-    // Reset match result by removing the result property
+    // Reset match by removing result and setting status back to scheduled
     const { result, ...matchWithoutResult } = rounds[roundIndex].matches[matchIndex];
-    rounds[roundIndex].matches[matchIndex] = matchWithoutResult;
+    rounds[roundIndex].matches[matchIndex] = {
+      ...matchWithoutResult,
+      status: 'scheduled' as const
+    };
 
     await updateDoc(seasonRef, { rounds });
 
@@ -593,6 +594,46 @@ export async function resetMatchResult(seasonId: string, roundId: string, matchI
       success: false,
       error: {
         message: "Erreur lors de la réinitialisation du résultat",
+        code: "unknown" as const,
+      },
+    };
+  }
+}
+
+export async function getCurrentSeason() {
+  try {
+    const currentYear = new Date().getFullYear();
+    const seasonsRef = collection(db, "seasons");
+    const querySnapshot = await getDocs(seasonsRef);
+    
+    // Find season that contains current year in its name (e.g., "2024-2025")
+    const currentSeason = querySnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() as SeasonFirestore }))
+      .find(season => {
+        const seasonYears = season.name.split('-').map(Number);
+        return seasonYears.includes(currentYear) || seasonYears.includes(currentYear + 1);
+      });
+
+    if (!currentSeason) {
+      return {
+        success: false,
+        error: {
+          message: "Aucune saison en cours trouvée",
+          code: "not_found" as const,
+        },
+      };
+    }
+
+    return { 
+      success: true, 
+      season: currentSeason 
+    };
+  } catch (error) {
+    console.error("Error fetching current season:", error);
+    return {
+      success: false,
+      error: {
+        message: "Erreur lors du chargement de la saison",
         code: "unknown" as const,
       },
     };

@@ -1,12 +1,13 @@
-import { Season, Match, TeamStats, Standing } from "@/types/season";
+import { Season, TeamStats, Standing } from "@/types/season";
 import { Team } from "@/types/team";
 
 export function calculateStandings(season: Season, teams: Team[]): Standing[] {
-  // Initialize team stats
-  const teamStats = new Map<string, TeamStats>();
-
+  // Initialize stats for all teams
+  const teamStats: { [key: string]: TeamStats } = {};
+  
+  // Initialize stats for each team
   teams.forEach(team => {
-    teamStats.set(team.id, {
+    teamStats[team.id] = {
       teamId: team.id,
       played: 0,
       won: 0,
@@ -17,99 +18,79 @@ export function calculateStandings(season: Season, teams: Team[]): Standing[] {
       goalDifference: 0,
       points: 0,
       form: [],
-    });
+    };
   });
 
   // Calculate stats from matches
   season.rounds.forEach(round => {
     round.matches.forEach(match => {
-      if (match.result && match.result.status === 'completed') {
-        const homeStats = teamStats.get(match.homeTeamId);
-        const awayStats = teamStats.get(match.awayTeamId);
+      // Only count completed matches
+      if (match.status === 'completed' && match.result) {
+        const homeTeamStats = teamStats[match.homeTeamId];
+        const awayTeamStats = teamStats[match.awayTeamId];
 
-        if (homeStats && awayStats) {
+        if (homeTeamStats && awayTeamStats) {
           // Update matches played
-          homeStats.played++;
-          awayStats.played++;
+          homeTeamStats.played++;
+          awayTeamStats.played++;
 
           // Update goals
-          const homeScore = match.result.homeScore;
-          const awayScore = match.result.awayScore;
-          
-          homeStats.goalsFor += homeScore;
-          homeStats.goalsAgainst += awayScore;
-          awayStats.goalsFor += awayScore;
-          awayStats.goalsAgainst += homeScore;
+          homeTeamStats.goalsFor += match.result.homeScore;
+          homeTeamStats.goalsAgainst += match.result.awayScore;
+          awayTeamStats.goalsFor += match.result.awayScore;
+          awayTeamStats.goalsAgainst += match.result.homeScore;
 
           // Update goal difference
-          homeStats.goalDifference = homeStats.goalsFor - homeStats.goalsAgainst;
-          awayStats.goalDifference = awayStats.goalsFor - awayStats.goalsAgainst;
+          homeTeamStats.goalDifference = homeTeamStats.goalsFor - homeTeamStats.goalsAgainst;
+          awayTeamStats.goalDifference = awayTeamStats.goalsFor - awayTeamStats.goalsAgainst;
 
-          // Update wins, draws, losses and points based on the result
-          if (homeScore > awayScore) {
-            // Home team wins
-            homeStats.won++;
-            awayStats.lost++;
-            homeStats.points += season.pointsSystem.win;
-            awayStats.points += season.pointsSystem.loss;
-            homeStats.form.push('W');
-            awayStats.form.push('L');
-          } else if (homeScore < awayScore) {
-            // Away team wins
-            homeStats.lost++;
-            awayStats.won++;
-            homeStats.points += season.pointsSystem.loss;
-            awayStats.points += season.pointsSystem.win;
-            homeStats.form.push('L');
-            awayStats.form.push('W');
+          // Determine match outcome and update points
+          if (match.result.homeScore > match.result.awayScore) {
+            // Home team won
+            homeTeamStats.won++;
+            homeTeamStats.points += season.pointsSystem.win;
+            awayTeamStats.lost++;
+            homeTeamStats.form.push('W');
+            awayTeamStats.form.push('L');
+          } else if (match.result.homeScore < match.result.awayScore) {
+            // Away team won
+            awayTeamStats.won++;
+            awayTeamStats.points += season.pointsSystem.win;
+            homeTeamStats.lost++;
+            homeTeamStats.form.push('L');
+            awayTeamStats.form.push('W');
           } else {
             // Draw
-            homeStats.drawn++;
-            awayStats.drawn++;
-            homeStats.points += season.pointsSystem.draw;
-            awayStats.points += season.pointsSystem.draw;
-            homeStats.form.push('D');
-            awayStats.form.push('D');
+            homeTeamStats.drawn++;
+            awayTeamStats.drawn++;
+            homeTeamStats.points += season.pointsSystem.draw;
+            awayTeamStats.points += season.pointsSystem.draw;
+            homeTeamStats.form.push('D');
+            awayTeamStats.form.push('D');
           }
-
-          // Keep only last 5 matches in form
-          homeStats.form = homeStats.form.slice(-5);
-          awayStats.form = awayStats.form.slice(-5);
         }
       }
     });
   });
 
   // Convert to array and sort
-  const standings = Array.from(teamStats.values()).map((stats) => ({
-    stats,
-    position: 0, // Will be set after sorting
-  }));
-
-  // Sort by:
-  // 1. Points (highest first)
-  // 2. Goal difference (highest first)
-  // 3. Goals scored (highest first)
-  // 4. Head-to-head results (if needed)
-  standings.sort((a, b) => {
-    // Points comparison
-    if (b.stats.points !== a.stats.points) {
-      return b.stats.points - a.stats.points;
-    }
-
-    // Goal difference comparison
-    if (b.stats.goalDifference !== a.stats.goalDifference) {
-      return b.stats.goalDifference - a.stats.goalDifference;
-    }
-
-    // Goals scored comparison
-    if (b.stats.goalsFor !== a.stats.goalsFor) {
+  const standings = Object.values(teamStats)
+    .map((stats, index) => ({
+      stats,
+      position: index + 1,
+    }))
+    .sort((a, b) => {
+      // Sort by points
+      if (b.stats.points !== a.stats.points) {
+        return b.stats.points - a.stats.points;
+      }
+      // If points are equal, sort by goal difference
+      if (b.stats.goalDifference !== a.stats.goalDifference) {
+        return b.stats.goalDifference - a.stats.goalDifference;
+      }
+      // If goal difference is equal, sort by goals scored
       return b.stats.goalsFor - a.stats.goalsFor;
-    }
-
-    // If everything is equal, maintain stable sort
-    return 0;
-  });
+    });
 
   // Update positions after sorting
   standings.forEach((standing, index) => {
