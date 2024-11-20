@@ -1,20 +1,28 @@
-'use server'
+"use server";
 
 import { db } from "@/config/firebase";
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
+import {
+  collection,
+  addDoc,
+  getDocs,
   getDoc,
-  query, 
-  where, 
+  query,
+  where,
   Timestamp,
   deleteDoc,
   doc,
   serverTimestamp,
-  updateDoc
+  updateDoc,
+  orderBy,
+  onSnapshot,
 } from "firebase/firestore";
-import { TeamFormData, TeamUpdateData, TeamMemberFormData, convertFirestoreDataToTeam } from "@/types/team";
+import {
+  TeamFormData,
+  TeamUpdateData,
+  TeamMemberFormData,
+  convertFirestoreDataToTeam,
+  Team,
+} from "@/types/team";
 import { uploadImage, deleteImage } from "@/lib/uploadImage";
 import { ActionError, TeamActionError } from "@/types/errors";
 
@@ -27,12 +35,22 @@ interface CreateTeamData {
 export async function createTeam(data: CreateTeamData) {
   try {
     if (!data.name.trim()) {
-      return { 
-        success: false, 
-        error: { 
+      return {
+        success: false,
+        error: {
           message: "Le nom de l'équipe est requis",
-          code: 'unknown' as const
-        }
+          code: "unknown" as const,
+        },
+      };
+    }
+
+    if (!data.logoUrl) {
+      return {
+        success: false,
+        error: {
+          message: "Le logo de l'équipe est requis",
+          code: "unknown" as const,
+        },
       };
     }
 
@@ -43,21 +61,22 @@ export async function createTeam(data: CreateTeamData) {
     );
 
     if (!teamQuery.empty) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: {
           message: "Une équipe avec ce nom existe déjà",
-          code: 'duplicate_name' as const
-        }
+          code: "duplicate_name" as const,
+        },
       };
     }
 
-    // Create the team document data
+    // Create the team document data with empty members array
     const teamData = {
       name: data.name.trim(),
       logo: data.logoUrl,
       seasons: data.seasons || [],
-      createdAt: serverTimestamp()
+      members: [], // Initialize empty members array
+      createdAt: serverTimestamp(),
     };
 
     // Create the team document
@@ -66,12 +85,12 @@ export async function createTeam(data: CreateTeamData) {
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error("Error creating team:", error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: {
         message: "Erreur lors de la création de l'équipe",
-        code: 'unknown' as const
-      }
+        code: "unknown" as const,
+      },
     };
   }
 }
@@ -79,28 +98,38 @@ export async function createTeam(data: CreateTeamData) {
 export async function deleteTeam(teamId: string) {
   try {
     if (!teamId) {
-      return { success: false, error: {
-        message: "ID de l'équipe manquant",
-        code: 'unknown' as const
-      }};
+      return {
+        success: false,
+        error: {
+          message: "ID de l'équipe manquant",
+          code: "unknown" as const,
+        },
+      };
     }
 
     const teamRef = doc(db, "teams", teamId);
     const teamDoc = await getDoc(teamRef);
 
     if (!teamDoc.exists()) {
-      return { success: false, error: {
-        message: "Équipe non trouvée",
-        code: 'not_found' as const
-      }};
+      return {
+        success: false,
+        error: {
+          message: "Équipe non trouvée",
+          code: "not_found" as const,
+        },
+      };
     }
 
     const team = teamDoc.data();
     if (team?.seasons?.length > 0) {
-      return { success: false, error: {
-        message: "Cette équipe ne peut pas être supprimée car elle participe à une ou plusieurs saisons",
-        code: 'team_in_use' as const
-      }};
+      return {
+        success: false,
+        error: {
+          message:
+            "Cette équipe ne peut pas être supprimée car elle participe à une ou plusieurs saisons",
+          code: "team_in_use" as const,
+        },
+      };
     }
 
     // Don't try to delete the logo when deleting team
@@ -108,27 +137,36 @@ export async function deleteTeam(teamId: string) {
     return { success: true };
   } catch (error) {
     console.error("Error deleting team:", error);
-    return { success: false, error: {
-      message: "Erreur lors de la suppression de l'équipe",
-      code: 'unknown' as const
-    }};
+    return {
+      success: false,
+      error: {
+        message: "Erreur lors de la suppression de l'équipe",
+        code: "unknown" as const,
+      },
+    };
   }
 }
 
 export async function updateTeam(teamId: string, data: TeamUpdateData) {
   try {
     if (!teamId) {
-      return { success: false, error: {
-        message: "ID de l'équipe manquant",
-        code: 'unknown' as const
-      }};
+      return {
+        success: false,
+        error: {
+          message: "ID de l'équipe manquant",
+          code: "unknown" as const,
+        },
+      };
     }
 
     if (!data.name.trim()) {
-      return { success: false, error: {
-        message: "Le nom de l'équipe est requis",
-        code: 'unknown' as const
-      }};
+      return {
+        success: false,
+        error: {
+          message: "Le nom de l'équipe est requis",
+          code: "unknown" as const,
+        },
+      };
     }
 
     const teamRef = doc(db, "teams", teamId);
@@ -151,12 +189,12 @@ export async function updateTeam(teamId: string, data: TeamUpdateData) {
     return { success: true };
   } catch (error) {
     console.error("Error updating team:", error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: {
         message: "Erreur lors de la mise à jour de l'équipe",
-        code: 'unknown' as const
-      }
+        code: "unknown" as const,
+      },
     };
   }
 }
@@ -179,17 +217,7 @@ export async function addTeamMember(teamId: string, data: TeamMemberFormData) {
     const team = teamDoc.data();
     const members = team.members || [];
 
-    // Check if number or name is already taken
-    if (members.some((m: any) => m.number === data.number)) {
-      return {
-        success: false,
-        error: {
-          message: "Ce numéro est déjà utilisé",
-          code: "duplicate_number" as const,
-        },
-      };
-    }
-
+    // Check if name is already taken
     if (members.some((m: any) => m.name.toLowerCase() === data.name.toLowerCase())) {
       return {
         success: false,
@@ -203,7 +231,10 @@ export async function addTeamMember(teamId: string, data: TeamMemberFormData) {
     const newMember = {
       id: crypto.randomUUID(),
       name: data.name,
-      number: data.number,
+      stats: {
+        goals: 0,
+        assists: 0
+      },
       createdAt: new Date().toISOString(),
     };
 
@@ -211,10 +242,7 @@ export async function addTeamMember(teamId: string, data: TeamMemberFormData) {
       members: [...members, newMember],
     });
 
-    return { 
-      success: true,
-      error: undefined
-    };
+    return { success: true };
   } catch (error) {
     console.error("Error adding team member:", error);
     return {
@@ -227,7 +255,11 @@ export async function addTeamMember(teamId: string, data: TeamMemberFormData) {
   }
 }
 
-export async function updateTeamMember(teamId: string, memberId: string, data: TeamMemberFormData) {
+export async function updateTeamMember(
+  teamId: string,
+  memberId: string,
+  data: TeamMemberFormData
+) {
   try {
     const teamRef = doc(db, "teams", teamId);
     const teamDoc = await getDoc(teamRef);
@@ -256,18 +288,11 @@ export async function updateTeamMember(teamId: string, memberId: string, data: T
       };
     }
 
-    // Check if number or name is already taken by other members
-    if (members.some((m: any) => m.id !== memberId && m.number === data.number)) {
-      return {
-        success: false,
-        error: {
-          message: "Ce numéro est déjà utilisé",
-          code: "duplicate_number" as const,
-        },
-      };
-    }
-
-    if (members.some((m: any) => m.id !== memberId && m.name.toLowerCase() === data.name.toLowerCase())) {
+    // Check if name is already taken by other members
+    if (
+      members.some((m: any) => m.id !== memberId && m.name.toLowerCase() === data.name.toLowerCase()
+      )
+    ) {
       return {
         success: false,
         error: {
@@ -280,7 +305,6 @@ export async function updateTeamMember(teamId: string, memberId: string, data: T
     const updatedMember = {
       ...members[memberIndex],
       name: data.name,
-      number: data.number,
     };
 
     members[memberIndex] = updatedMember;
@@ -350,9 +374,10 @@ export async function getTeam(teamId: string) {
     const data = teamDoc.data();
     const members = (data.members || []).map((member: any) => ({
       ...member,
-      createdAt: member.createdAt instanceof Timestamp 
-        ? member.createdAt.toDate().toISOString()
-        : member.createdAt,
+      createdAt:
+        member.createdAt instanceof Timestamp
+          ? member.createdAt.toDate().toISOString()
+          : member.createdAt,
     }));
 
     const team = {
@@ -360,10 +385,10 @@ export async function getTeam(teamId: string) {
       members,
     };
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       team,
-      error: undefined
+      error: undefined,
     };
   } catch (error) {
     console.error("Error fetching team:", error);
@@ -381,8 +406,8 @@ export async function getTeams() {
   try {
     const teamsRef = collection(db, "teams");
     const querySnapshot = await getDocs(teamsRef);
-    
-    const teams = querySnapshot.docs.map(doc => 
+
+    const teams = querySnapshot.docs.map((doc) =>
       convertFirestoreDataToTeam(doc.id, doc.data())
     );
 
@@ -395,7 +420,35 @@ export async function getTeams() {
         message: "Erreur lors du chargement des équipes",
         code: "unknown" as const,
       },
-      teams: []
+      teams: [],
     };
   }
-} 
+}
+
+export async function getAllTeams() {
+  try {
+    const teamsRef = collection(db, "teams");
+    const teamsQuery = query(teamsRef, orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(teamsQuery);
+
+    const teamsData = querySnapshot.docs.map((doc) =>
+      convertFirestoreDataToTeam(doc.id, doc.data())
+    );
+
+    return {
+      success: true,
+      teams: teamsData,
+      error: undefined,
+    };
+  } catch (error) {
+    console.error("Error fetching teams:", error);
+    return {
+      success: false,
+      error: {
+        message: "Erreur lors du chargement des équipes",
+        code: "unknown" as const,
+      },
+      teams: [],
+    };
+  }
+}

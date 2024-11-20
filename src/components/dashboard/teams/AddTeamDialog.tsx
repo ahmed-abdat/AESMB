@@ -23,14 +23,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { createTeam } from "@/app/actions/teams";
-import { TeamFormData } from "@/types/team";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import { IconUpload } from "@tabler/icons-react";
 import { validateImageFile } from "@/lib/validators";
-import { TeamActionError } from "@/types/errors";
 import { uploadImage } from "@/lib/uploadImage";
 
 interface SimpleSeason {
@@ -40,30 +38,31 @@ interface SimpleSeason {
 
 const formSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
-  logo: z.any().optional(),
+  logo: z.custom<File>((v) => v instanceof File, {
+    message: "Le logo est requis",
+  }),
   seasons: z.array(z.string()),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface AddTeamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
 export function AddTeamDialog({
   open,
   onOpenChange,
-  onSuccess,
 }: AddTeamDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [availableSeasons, setAvailableSeasons] = useState<SimpleSeason[]>([]);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-  const form = useForm<TeamFormData>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      logo: null,
       seasons: [],
     },
   });
@@ -119,7 +118,12 @@ export function AddTeamDialog({
     }
   };
 
-  const onSubmit = async (values: TeamFormData) => {
+  const onSubmit = async (values: FormValues) => {
+    if (!values.logo) {
+      toast.error("Le logo est requis");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       let logoUrl = "";
@@ -145,7 +149,6 @@ export function AddTeamDialog({
 
       if (result.success) {
         toast.success("Équipe créée avec succès");
-        onSuccess();
         onOpenChange(false);
         form.reset();
         setLogoPreview(null);
@@ -223,6 +226,7 @@ export function AddTeamDialog({
                           handleLogoChange(file);
                         }}
                         {...field}
+                        required
                       />
                     </div>
                   </FormControl>

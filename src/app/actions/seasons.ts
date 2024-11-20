@@ -12,9 +12,10 @@ import {
   doc,
   serverTimestamp,
   updateDoc,
-  getDoc
+  getDoc,
+  writeBatch
 } from "firebase/firestore";
-import { SeasonFormData, SeasonFirestore, DEFAULT_POINTS_SYSTEM } from "@/types/season";
+import { SeasonFormData, SeasonFirestore, DEFAULT_POINTS_SYSTEM, convertFirestoreDataToSeason } from "@/types/season";
 import { isAfter, isBefore, startOfToday } from "date-fns";
 import { convertFirestoreDataToTeam } from "@/types/team";
 
@@ -60,12 +61,47 @@ export async function createSeason(data: SeasonFormData) {
 
 export async function deleteSeason(seasonId: string) {
   try {
+    // First, get all teams that participate in this season
+    const teamsRef = collection(db, "teams");
+    const teamsQuery = query(
+      teamsRef,
+      where("seasons", "array-contains", seasonId)
+    );
+    const teamsSnapshot = await getDocs(teamsQuery);
+
+    // Start a batch write
+    const batch = writeBatch(db);
+
+    // Remove the season from each team's seasons array
+    teamsSnapshot.docs.forEach((teamDoc) => {
+      const teamRef = doc(db, "teams", teamDoc.id);
+      const teamData = teamDoc.data();
+      const updatedSeasons = teamData.seasons.filter(
+        (season: string) => season !== seasonId
+      );
+      batch.update(teamRef, { seasons: updatedSeasons });
+    });
+
+    // Delete the season document
     const seasonRef = doc(db, "seasons", seasonId);
-    await deleteDoc(seasonRef);
-    return { success: true };
+    batch.delete(seasonRef);
+
+    // Commit the batch
+    await batch.commit();
+
+    return { 
+      success: true,
+      error: undefined
+    };
   } catch (error) {
     console.error("Error deleting season:", error);
-    throw error;
+    return {
+      success: false,
+      error: {
+        message: "Erreur lors de la suppression de la saison",
+        code: "unknown" as const,
+      }
+    };
   }
 }
 
@@ -636,6 +672,60 @@ export async function getCurrentSeason() {
         message: "Erreur lors du chargement de la saison",
         code: "unknown" as const,
       },
+    };
+  }
+}
+
+export async function getSeasonData(seasonId: string) {
+  try {
+    const seasonDoc = await getDoc(doc(db, "seasons", seasonId));
+    if (!seasonDoc.exists()) {
+      return {
+        success: false,
+        error: {
+          message: "Saison non trouvée",
+          code: "not_found" as const,
+        },
+        season: null
+      };
+    }
+    const season = convertFirestoreDataToSeason(seasonDoc.id, seasonDoc.data());
+    return { 
+      success: true, 
+      season,
+      error: undefined
+    };
+  } catch (error) {
+    console.error("Error fetching season:", error);
+    return {
+      success: false,
+      error: {
+        message: "Erreur lors du chargement de la saison",
+        code: "unknown" as const,
+      },
+      season: null
+    };
+  }
+}
+
+export async function getTotalTeams() {
+  try {
+    const teamsRef = collection(db, "teams");
+    const teamsSnapshot = await getDocs(teamsRef);
+    return { 
+      success: true, 
+      total: teamsSnapshot.size,
+      error: undefined
+    };
+  } catch (error) {
+    console.error("Error fetching total teams:", error);
+    return {
+      success: false,
+      error: {
+        message: "Erreur lors du comptage des équipes",
+        code: "unknown" as const,
+      },
+      total: 0
     };
   }
 } 

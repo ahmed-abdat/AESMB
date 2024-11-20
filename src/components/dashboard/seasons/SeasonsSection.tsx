@@ -48,7 +48,6 @@ interface SeasonsSectionProps {
 }
 
 export function SeasonsSection({ seasons, onUpdate }: SeasonsSectionProps) {
-  console.log(seasons[0].rounds.length);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);

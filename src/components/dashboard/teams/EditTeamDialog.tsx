@@ -39,33 +39,38 @@ interface SimpleSeason {
 
 const formSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
-  logo: z.any().optional(),
+  logo: z.union([
+    z.custom<File>(),
+    z.string()
+  ]).refine((val) => val !== "", {
+    message: "Le logo est requis"
+  }),
   seasons: z.array(z.string()).default([]),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface EditTeamDialogProps {
   team: Team;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
 export function EditTeamDialog({
   team,
   open,
   onOpenChange,
-  onSuccess,
 }: EditTeamDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(team.logo);
   const [shouldDeleteLogo, setShouldDeleteLogo] = useState(false);
   const [availableSeasons, setAvailableSeasons] = useState<SimpleSeason[]>([]);
 
-  const form = useForm<TeamFormData>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: team.name,
-      logo: null,
+      logo: team.logo,
       seasons: team.seasons,
     },
   });
@@ -93,7 +98,7 @@ export function EditTeamDialog({
       fetchSeasons();
       form.reset({
         name: team.name,
-        logo: null,
+        logo: team.logo,
         seasons: team.seasons,
       });
       setLogoPreview(team.logo);
@@ -123,18 +128,16 @@ export function EditTeamDialog({
   };
 
   const handleDeleteLogo = () => {
-    form.setValue("logo", null);
-    setLogoPreview(null);
-    setShouldDeleteLogo(true);
+    toast.error("Le logo est requis");
+    return;
   };
 
-  const onSubmit = async (values: TeamFormData) => {
+  const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
       let logoUrl = undefined;
 
-      // Handle logo update
-      if (values.logo) {
+      if (values.logo instanceof File) {
         try {
           validateImageFile(values.logo);
           const uploadResult = await uploadImage(values.logo);
@@ -152,12 +155,10 @@ export function EditTeamDialog({
         name: values.name.trim(),
         seasons: values.seasons,
         ...(logoUrl && { logoUrl }),
-        ...(shouldDeleteLogo && { logoUrl: "" }),
       });
 
       if (result.success) {
         toast.success("Équipe mise à jour avec succès");
-        onSuccess();
         onOpenChange(false);
       } else if (result.error) {
         toast.error(result.error.message);

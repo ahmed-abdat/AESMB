@@ -3,7 +3,10 @@ import { Timestamp } from "firebase/firestore";
 export interface TeamMember {
   id: string;
   name: string;
-  number: number;
+  stats: {
+    goals: number;
+    assists: number;
+  };
   createdAt: string;
 }
 
@@ -13,7 +16,8 @@ export interface Team {
   logo: string;
   seasons: string[];
   members: TeamMember[];
-  createdAt: Date;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface TeamFirestore {
@@ -22,11 +26,12 @@ export interface TeamFirestore {
   seasons: string[];
   members: TeamMember[];
   createdAt: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 export interface TeamFormData {
   name: string;
-  logo?: File | null;
+  logo: File;
   seasons: string[];
 }
 
@@ -39,7 +44,6 @@ export interface TeamUpdateData {
 
 export interface TeamMemberFormData {
   name: string;
-  number: number;
 }
 
 export function convertFirestoreDataToTeam(id: string, data: any): Team {
@@ -49,6 +53,11 @@ export function convertFirestoreDataToTeam(id: string, data: any): Team {
     logo: data.logo,
     seasons: data.seasons || [],
     members: data.members || [],
-    createdAt: data.createdAt.toDate(),
+    createdAt: data.createdAt instanceof Timestamp 
+      ? data.createdAt.toDate().toISOString()
+      : data.createdAt,
+    updatedAt: data.updatedAt instanceof Timestamp 
+      ? data.updatedAt.toDate().toISOString()
+      : data.updatedAt,
   };
 }

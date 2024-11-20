@@ -27,24 +27,18 @@ import { addTeamMember } from "@/app/actions/teams";
 
 const formSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
-  number: z.coerce
-    .number()
-    .min(1, "Le numéro doit être supérieur à 0")
-    .max(99, "Le numéro doit être inférieur à 100"),
 });
 
 interface AddTeamMemberDialogProps {
   teamId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
 export function AddTeamMemberDialog({
   teamId,
   open,
   onOpenChange,
-  onSuccess,
 }: AddTeamMemberDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -52,7 +46,6 @@ export function AddTeamMemberDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      number: undefined,
     },
   });
 
@@ -63,7 +56,6 @@ export function AddTeamMemberDialog({
 
       if (result.success) {
         toast.success("Joueur ajouté avec succès");
-        onSuccess();
         onOpenChange(false);
         form.reset();
       } else {
@@ -96,26 +88,6 @@ export function AddTeamMemberDialog({
                   <FormLabel>Nom du joueur</FormLabel>
                   <FormControl>
                     <Input placeholder="Lionel Messi" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Numéro</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="10"
-                      min={1}
-                      max={99}
-                      {...field}
-                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

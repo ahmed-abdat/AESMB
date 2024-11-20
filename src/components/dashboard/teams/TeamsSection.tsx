@@ -22,15 +22,13 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { deleteTeam } from "@/app/actions/teams";
 import { toast } from "sonner";
 import Image from "next/image";
-import { TeamActionError } from "@/types/errors";
 import Link from "next/link";
 
 interface TeamsSectionProps {
   teams: Team[];
-  onUpdate: () => void;
 }
 
-export function TeamsSection({ teams, onUpdate }: TeamsSectionProps) {
+export function TeamsSection({ teams }: TeamsSectionProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -62,7 +60,6 @@ export function TeamsSection({ teams, onUpdate }: TeamsSectionProps) {
       
       if (result.success) {
         toast.success("Équipe supprimée avec succès");
-        onUpdate();
         setIsDeleteDialogOpen(false);
       } else if (result.error) {
         if (result.error.code === 'team_in_use') {
@@ -167,7 +164,6 @@ export function TeamsSection({ teams, onUpdate }: TeamsSectionProps) {
       <AddTeamDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
-        onSuccess={onUpdate}
       />
 
       {selectedTeam && (
@@ -176,7 +172,6 @@ export function TeamsSection({ teams, onUpdate }: TeamsSectionProps) {
             team={selectedTeam}
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
-            onSuccess={onUpdate}
           />
 
           <ConfirmDialog
