@@ -36,10 +36,9 @@ import {
 interface SeasonMatchesProps {
   season: Season;
   teams: Team[];
-  onUpdate: () => void;
 }
 
-export function SeasonMatches({ season, teams, onUpdate }: SeasonMatchesProps) {
+export function SeasonMatches({ season, teams }: SeasonMatchesProps) {
   const [isAddRoundDialogOpen, setIsAddRoundDialogOpen] = useState(false);
   const [isAddMatchDialogOpen, setIsAddMatchDialogOpen] = useState(false);
   const [isEditMatchDialogOpen, setIsEditMatchDialogOpen] = useState(false);
@@ -81,7 +80,6 @@ export function SeasonMatches({ season, teams, onUpdate }: SeasonMatchesProps) {
       
       if (result.success) {
         toast.success("Match supprimé avec succès");
-        onUpdate();
         setIsDeleteMatchDialogOpen(false);
       } else {
         toast.error(result.error?.message || "Erreur lors de la suppression du match");
@@ -103,7 +101,6 @@ export function SeasonMatches({ season, teams, onUpdate }: SeasonMatchesProps) {
       
       if (result.success) {
         toast.success("Journée supprimée avec succès");
-        onUpdate();
         setIsDeleteRoundDialogOpen(false);
       } else {
         toast.error(result.error?.message || "Erreur lors de la suppression de la journée");
@@ -236,7 +233,6 @@ export function SeasonMatches({ season, teams, onUpdate }: SeasonMatchesProps) {
         seasonId={season.id}
         open={isAddRoundDialogOpen}
         onOpenChange={setIsAddRoundDialogOpen}
-        onSuccess={onUpdate}
       />
 
       {selectedRound && (
@@ -247,7 +243,6 @@ export function SeasonMatches({ season, teams, onUpdate }: SeasonMatchesProps) {
             teams={teams}
             open={isAddMatchDialogOpen}
             onOpenChange={setIsAddMatchDialogOpen}
-            onSuccess={onUpdate}
           />
 
           {selectedMatch && (
@@ -259,7 +254,6 @@ export function SeasonMatches({ season, teams, onUpdate }: SeasonMatchesProps) {
                 teams={teams}
                 open={isEditMatchDialogOpen}
                 onOpenChange={setIsEditMatchDialogOpen}
-                onSuccess={onUpdate}
               />
 
               <ConfirmDialog

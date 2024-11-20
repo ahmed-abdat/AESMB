@@ -44,10 +44,9 @@ const statusLabels = {
 
 interface SeasonsSectionProps {
   seasons: Season[];
-  onUpdate: () => void;
 }
 
-export function SeasonsSection({ seasons, onUpdate }: SeasonsSectionProps) {
+export function SeasonsSection({ seasons }: SeasonsSectionProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -71,7 +70,6 @@ export function SeasonsSection({ seasons, onUpdate }: SeasonsSectionProps) {
     try {
       await deleteSeason(selectedSeason.id);
       toast.success("Saison supprimée avec succès");
-      onUpdate();
     } catch (error) {
       console.error("Error deleting season:", error);
       toast.error("Erreur lors de la suppression de la saison");
@@ -186,7 +184,6 @@ export function SeasonsSection({ seasons, onUpdate }: SeasonsSectionProps) {
       <AddSeasonDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
-        onSuccess={onUpdate}
       />
 
       {selectedSeason && (
@@ -195,7 +192,6 @@ export function SeasonsSection({ seasons, onUpdate }: SeasonsSectionProps) {
             season={selectedSeason}
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
-            onSuccess={onUpdate}
           />
 
           <ConfirmDialog
@@ -203,7 +199,14 @@ export function SeasonsSection({ seasons, onUpdate }: SeasonsSectionProps) {
             onOpenChange={setIsDeleteDialogOpen}
             onConfirm={confirmDelete}
             title="Supprimer la saison"
-            description={`Êtes-vous sûr de vouloir supprimer la saison "${selectedSeason.name}" ? Cette action est irréversible.`}
+            description={
+              <>
+                <p>Êtes-vous sûr de vouloir supprimer la saison &quot;{selectedSeason.name}&quot; ?</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Cette action est irréversible.
+                </p>
+              </>
+            }
             confirmText="Supprimer"
             variant="destructive"
             isLoading={isLoading}

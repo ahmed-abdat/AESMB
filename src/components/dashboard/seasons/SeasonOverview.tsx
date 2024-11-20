@@ -15,7 +15,6 @@ import Link from "next/link";
 
 interface SeasonOverviewProps {
   season: Season;
-  onUpdate: () => void;
 }
 
 export function SeasonOverview({ season }: SeasonOverviewProps) {

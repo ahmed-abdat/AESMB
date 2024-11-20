@@ -52,7 +52,6 @@ interface AddMatchDialogProps {
   teams: Team[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
 export function AddMatchDialog({
@@ -61,7 +60,6 @@ export function AddMatchDialog({
   teams,
   open,
   onOpenChange,
-  onSuccess,
 }: AddMatchDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -90,7 +88,6 @@ export function AddMatchDialog({
 
       if (result.success) {
         toast.success("Match ajouté avec succès");
-        onSuccess();
         onOpenChange(false);
         form.reset();
       } else {

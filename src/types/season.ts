@@ -14,12 +14,18 @@ export interface SeasonFormData {
   endDate: Date;
 }
 
+export interface Goal {
+  id: string;
+  scorerId: string;
+  assistId?: string;
+}
+
 export interface MatchResult {
   homeScore: number;
   awayScore: number;
-  stats: {
-    homeTeam: MatchStats;
-    awayTeam: MatchStats;
+  goals: {
+    home: Goal[];
+    away: Goal[];
   };
 }
 

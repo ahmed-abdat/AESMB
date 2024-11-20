@@ -12,4 +12,20 @@ export function validateImageFile(file: File) {
   }
 
   return true;
+}
+
+export function validateSeasonName(name: string) {
+  // Match pattern "YYYY-YYYY" where second year is first year + 1
+  const pattern = /^(\d{4})-(\d{4})$/;
+  const match = name.match(pattern);
+  
+  if (!match) {
+    return false;
+  }
+
+  const firstYear = parseInt(match[1]);
+  const secondYear = parseInt(match[2]);
+
+  // Check if second year is first year + 1
+  return secondYear === firstYear + 1;
 } 

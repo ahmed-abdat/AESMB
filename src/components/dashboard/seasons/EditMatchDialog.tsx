@@ -52,7 +52,6 @@ interface EditMatchDialogProps {
   teams: Team[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
 export function EditMatchDialog({
@@ -62,7 +61,6 @@ export function EditMatchDialog({
   teams,
   open,
   onOpenChange,
-  onSuccess,
 }: EditMatchDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -95,7 +93,6 @@ export function EditMatchDialog({
 
       if (result.success) {
         toast.success("Match mis à jour avec succès");
-        onSuccess();
         onOpenChange(false);
       } else {
         toast.error(result.error?.message || "Erreur lors de la mise à jour du match");

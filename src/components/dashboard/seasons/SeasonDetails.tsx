@@ -13,27 +13,41 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { IconArrowLeft, IconUsers } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
+import { subscribeToSeason } from "@/lib/firebase/subscriptions";
 
 interface SeasonDetailsProps {
   season: Season;
   totalTeams: number;
 }
 
-export function SeasonDetails({ season, totalTeams }: SeasonDetailsProps) {
+export function SeasonDetails({ season: initialSeason, totalTeams }: SeasonDetailsProps) {
+  const [season, setSeason] = useState<Season>(initialSeason);
   const [teams, setTeams] = useState<Team[]>([]);
 
-  const fetchTeams = async () => {
-    const result = await getSeasonTeams(season.id);
-    if (result.success && result.teams) {
-      setTeams(result.teams);
-    } else {
-      toast.error(
-        result.error?.message || "Erreur lors du chargement des équipes"
-      );
-    }
-  };
-
+  // Subscribe to real-time season updates
   useEffect(() => {
+    const unsubscribe = subscribeToSeason(initialSeason.id, (updatedSeason) => {
+      if (updatedSeason) {
+        setSeason(updatedSeason);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [initialSeason.id]);
+
+  // Fetch teams whenever season changes
+  useEffect(() => {
+    const fetchTeams = async () => {
+      const result = await getSeasonTeams(season.id);
+      if (result.success && result.teams) {
+        setTeams(result.teams);
+      } else {
+        toast.error(
+          result.error?.message || "Erreur lors du chargement des équipes"
+        );
+      }
+    };
+
     fetchTeams();
   }, [season]);
 
@@ -73,18 +87,17 @@ export function SeasonDetails({ season, totalTeams }: SeasonDetailsProps) {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <SeasonOverview season={season} onUpdate={() => {}} />
+          <SeasonOverview season={season} />
         </TabsContent>
 
         <TabsContent value="matches" className="space-y-4">
-          <SeasonMatches season={season} teams={teams} onUpdate={() => {}} />
+          <SeasonMatches season={season} teams={teams} />
         </TabsContent>
 
         <TabsContent value="standings" className="space-y-4">
           <SeasonStandings
             season={season}
             teams={teams}
-            onUpdate={() => {}}
           />
         </TabsContent>
       </Tabs>

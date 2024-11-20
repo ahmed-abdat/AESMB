@@ -26,10 +26,16 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { isAfter } from "date-fns";
 import { updateSeason } from "@/app/actions/seasons";
 import { Season, SeasonFormData } from "@/types/season";
+import { validateSeasonName } from "@/lib/validators";
 
 const formSchema = z
   .object({
-    name: z.string().min(1, "Le nom est requis"),
+    name: z.string()
+      .min(1, "Le nom est requis")
+      .refine(
+        (value) => validateSeasonName(value),
+        "Le nom doit être au format 'YYYY-YYYY' (ex: 2024-2025)"
+      ),
     startDate: z.date({
       required_error: "La date de début est requise",
     }),
@@ -51,14 +57,12 @@ interface EditSeasonDialogProps {
   season: Season;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
 export function EditSeasonDialog({
   season,
   open,
   onOpenChange,
-  onSuccess,
 }: EditSeasonDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -87,10 +91,7 @@ export function EditSeasonDialog({
       const result = await updateSeason(season.id, values);
 
       if (result.success) {
-        toast.success("Saison mise à jour avec succès", {
-          description: `La saison "${values.name}" a été mise à jour`,
-        });
-        onSuccess();
+        toast.success("Saison mise à jour avec succès");
         onOpenChange(false);
       }
     } catch (error) {

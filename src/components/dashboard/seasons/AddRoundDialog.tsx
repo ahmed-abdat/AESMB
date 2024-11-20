@@ -34,14 +34,12 @@ interface AddRoundDialogProps {
   seasonId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
 export function AddRoundDialog({
   seasonId,
   open,
   onOpenChange,
-  onSuccess,
 }: AddRoundDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -59,7 +57,6 @@ export function AddRoundDialog({
 
       if (result.success) {
         toast.success("Journée ajoutée avec succès");
-        onSuccess();
         onOpenChange(false);
         form.reset();
       } else {

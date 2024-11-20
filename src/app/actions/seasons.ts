@@ -13,9 +13,10 @@ import {
   serverTimestamp,
   updateDoc,
   getDoc,
-  writeBatch
+  writeBatch,
+  orderBy
 } from "firebase/firestore";
-import { SeasonFormData, SeasonFirestore, DEFAULT_POINTS_SYSTEM, convertFirestoreDataToSeason } from "@/types/season";
+import { SeasonFormData, SeasonFirestore, DEFAULT_POINTS_SYSTEM, convertFirestoreDataToSeason, Goal } from "@/types/season";
 import { isAfter, isBefore, startOfToday } from "date-fns";
 import { convertFirestoreDataToTeam } from "@/types/team";
 
@@ -503,21 +504,9 @@ export async function deleteRound(seasonId: string, roundId: string) {
 interface UpdateMatchResultData {
   homeScore: number;
   awayScore: number;
-  stats: {
-    homeTeam: {
-      possession: number;
-      shots: number;
-      shotsOnTarget: number;
-      corners: number;
-      fouls: number;
-    };
-    awayTeam: {
-      possession: number;
-      shots: number;
-      shotsOnTarget: number;
-      corners: number;
-      fouls: number;
-    };
+  goals: {
+    home: Goal[];
+    away: Goal[];
   };
 }
 
@@ -528,6 +517,9 @@ export async function updateMatchResult(
   data: UpdateMatchResultData
 ) {
   try {
+    const batch = writeBatch(db);
+
+    // Get the season document
     const seasonRef = doc(db, "seasons", seasonId);
     const seasonDoc = await getDoc(seasonRef);
 
@@ -556,6 +548,97 @@ export async function updateMatchResult(
       };
     }
 
+    // Get previous match result to remove old stats if exists
+    const oldMatch = rounds[roundIndex].matches[matchIndex];
+    
+    // Get teams to update player stats
+    const homeTeamRef = doc(db, "teams", oldMatch.homeTeamId);
+    const awayTeamRef = doc(db, "teams", oldMatch.awayTeamId);
+    const [homeTeamDoc, awayTeamDoc] = await Promise.all([
+      getDoc(homeTeamRef),
+      getDoc(awayTeamRef)
+    ]);
+
+    if (!homeTeamDoc.exists() || !awayTeamDoc.exists()) {
+      return {
+        success: false,
+        error: {
+          message: "Équipe non trouvée",
+          code: "not_found" as const,
+        },
+      };
+    }
+
+    // Reset old stats if match was completed
+    if (oldMatch.status === 'completed' && oldMatch.result) {
+      const homeTeamData = homeTeamDoc.data();
+      const awayTeamData = awayTeamDoc.data();
+      
+      // Remove old home team stats
+      oldMatch.result.goals.home.forEach((goal: Goal) => {
+        const scorerIndex = homeTeamData.members.findIndex((m: any) => m.id === goal.scorerId);
+        if (scorerIndex !== -1) {
+          homeTeamData.members[scorerIndex].stats.goals--;
+        }
+        if (goal.assistId) {
+          const assisterIndex = homeTeamData.members.findIndex((m: any) => m.id === goal.assistId);
+          if (assisterIndex !== -1) {
+            homeTeamData.members[assisterIndex].stats.assists--;
+          }
+        }
+      });
+
+      // Remove old away team stats
+      oldMatch.result.goals.away.forEach((goal: Goal) => {
+        const scorerIndex = awayTeamData.members.findIndex((m: any) => m.id === goal.scorerId);
+        if (scorerIndex !== -1) {
+          awayTeamData.members[scorerIndex].stats.goals--;
+        }
+        if (goal.assistId) {
+          const assisterIndex = awayTeamData.members.findIndex((m: any) => m.id === goal.assistId);
+          if (assisterIndex !== -1) {
+            awayTeamData.members[assisterIndex].stats.assists--;
+          }
+        }
+      });
+
+      // Update teams with reset stats
+      batch.update(homeTeamRef, { members: homeTeamData.members });
+      batch.update(awayTeamRef, { members: awayTeamData.members });
+    }
+
+    // Add new stats
+    const homeTeamData = homeTeamDoc.data();
+    const awayTeamData = awayTeamDoc.data();
+
+    // Update home team stats
+    data.goals.home.forEach((goal) => {
+      const scorerIndex = homeTeamData.members.findIndex((m: any) => m.id === goal.scorerId);
+      if (scorerIndex !== -1) {
+        homeTeamData.members[scorerIndex].stats.goals++;
+      }
+      if (goal.assistId) {
+        const assisterIndex = homeTeamData.members.findIndex((m: any) => m.id === goal.assistId);
+        if (assisterIndex !== -1) {
+          homeTeamData.members[assisterIndex].stats.assists++;
+        }
+      }
+    });
+
+    // Update away team stats
+    data.goals.away.forEach((goal) => {
+      const scorerIndex = awayTeamData.members.findIndex((m: any) => m.id === goal.scorerId);
+      if (scorerIndex !== -1) {
+        awayTeamData.members[scorerIndex].stats.goals++;
+      }
+      if (goal.assistId) {
+        const assisterIndex = awayTeamData.members.findIndex((m: any) => m.id === goal.assistId);
+        if (assisterIndex !== -1) {
+          awayTeamData.members[assisterIndex].stats.assists++;
+        }
+      }
+    });
+
     // Update match with result and status
     const updatedMatch = {
       ...rounds[roundIndex].matches[matchIndex],
@@ -563,13 +646,19 @@ export async function updateMatchResult(
       result: {
         homeScore: data.homeScore,
         awayScore: data.awayScore,
-        stats: data.stats,
+        goals: data.goals,
       },
     };
 
     rounds[roundIndex].matches[matchIndex] = updatedMatch;
 
-    await updateDoc(seasonRef, { rounds });
+    // Add all updates to batch
+    batch.update(seasonRef, { rounds });
+    batch.update(homeTeamRef, { members: homeTeamData.members });
+    batch.update(awayTeamRef, { members: awayTeamData.members });
+
+    // Commit all updates
+    await batch.commit();
 
     return { success: true };
   } catch (error) {
@@ -639,18 +728,17 @@ export async function resetMatchResult(seasonId: string, roundId: string, matchI
 export async function getCurrentSeason() {
   try {
     const currentYear = new Date().getFullYear();
-    const seasonsRef = collection(db, "seasons");
-    const querySnapshot = await getDocs(seasonsRef);
+    const nextYear = currentYear + 1;
+    const currentSeasonName = `${currentYear}-${nextYear}`;
     
-    // Find season that contains current year in its name (e.g., "2024-2025")
-    const currentSeason = querySnapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() as SeasonFirestore }))
-      .find(season => {
-        const seasonYears = season.name.split('-').map(Number);
-        return seasonYears.includes(currentYear) || seasonYears.includes(currentYear + 1);
-      });
-
-    if (!currentSeason) {
+    const seasonsRef = collection(db, "seasons");
+    const seasonQuery = query(
+      seasonsRef, 
+      where("name", "==", currentSeasonName)
+    );
+    const querySnapshot = await getDocs(seasonQuery);
+    
+    if (querySnapshot.empty) {
       return {
         success: false,
         error: {
@@ -659,6 +747,12 @@ export async function getCurrentSeason() {
         },
       };
     }
+
+    const seasonDoc = querySnapshot.docs[0];
+    const currentSeason = convertFirestoreDataToSeason(
+      seasonDoc.id, 
+      seasonDoc.data()
+    );
 
     return { 
       success: true, 
@@ -726,6 +820,34 @@ export async function getTotalTeams() {
         code: "unknown" as const,
       },
       total: 0
+    };
+  }
+}
+
+export async function getAllSeasons() {
+  try {
+    const seasonsRef = collection(db, "seasons");
+    const seasonsQuery = query(seasonsRef, orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(seasonsQuery);
+    
+    const seasonsData = querySnapshot.docs.map((doc) => 
+      convertFirestoreDataToSeason(doc.id, doc.data())
+    );
+
+    return { 
+      success: true, 
+      seasons: seasonsData,
+      error: undefined 
+    };
+  } catch (error) {
+    console.error("Error fetching seasons:", error);
+    return {
+      success: false,
+      error: {
+        message: "Erreur lors du chargement des saisons",
+        code: "unknown" as const,
+      },
+      seasons: []
     };
   }
 } 

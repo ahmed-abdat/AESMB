@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -20,32 +21,33 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Match, MatchResult } from "@/types/season";
+import { Match } from "@/types/season";
 import { Team } from "@/types/team";
 import { updateMatchResult } from "@/app/actions/seasons";
+import { IconPlus, IconX } from "@tabler/icons-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
+const goalSchema = z.object({
+  id: z.string(),
+  scorerId: z.string().min(1, "Le buteur est requis"),
+  assistId: z.string().optional(),
+});
 
 const formSchema = z.object({
-  homeScore: z.coerce.number().min(0, "Le score doit être positif"),
-  awayScore: z.coerce.number().min(0, "Le score doit être positif"),
-  stats: z.object({
-    homeTeam: z.object({
-      possession: z.coerce.number().min(0).max(100),
-      shots: z.coerce.number().min(0),
-      shotsOnTarget: z.coerce.number().min(0),
-      corners: z.coerce.number().min(0),
-      fouls: z.coerce.number().min(0),
-    }),
-    awayTeam: z.object({
-      possession: z.coerce.number().min(0).max(100),
-      shots: z.coerce.number().min(0),
-      shotsOnTarget: z.coerce.number().min(0),
-      corners: z.coerce.number().min(0),
-      fouls: z.coerce.number().min(0),
-    }),
-  }),
+  homeGoals: z.array(goalSchema),
+  awayGoals: z.array(goalSchema),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface MatchResultDialogProps {
   seasonId: string;
@@ -55,7 +57,6 @@ interface MatchResultDialogProps {
   awayTeam: Team;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
 }
 
 export function MatchResultDialog({
@@ -66,245 +67,330 @@ export function MatchResultDialog({
   awayTeam,
   open,
   onOpenChange,
-  onSuccess,
 }: MatchResultDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      homeScore: match.result?.homeScore ?? 0,
-      awayScore: match.result?.awayScore ?? 0,
-      stats: {
-        homeTeam: {
-          possession: match.result?.stats?.homeTeam.possession ?? 50,
-          shots: match.result?.stats?.homeTeam.shots ?? 0,
-          shotsOnTarget: match.result?.stats?.homeTeam.shotsOnTarget ?? 0,
-          corners: match.result?.stats?.homeTeam.corners ?? 0,
-          fouls: match.result?.stats?.homeTeam.fouls ?? 0,
-        },
-        awayTeam: {
-          possession: match.result?.stats?.awayTeam.possession ?? 50,
-          shots: match.result?.stats?.awayTeam.shots ?? 0,
-          shotsOnTarget: match.result?.stats?.awayTeam.shotsOnTarget ?? 0,
-          corners: match.result?.stats?.awayTeam.corners ?? 0,
-          fouls: match.result?.stats?.awayTeam.fouls ?? 0,
-        },
-      },
+      homeGoals: match.result?.goals?.home.map(goal => ({
+        ...goal,
+        assistId: goal.assistId || "none",
+      })) || [],
+      awayGoals: match.result?.goals?.away.map(goal => ({
+        ...goal,
+        assistId: goal.assistId || "none",
+      })) || [],
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const { fields: homeGoalFields, append: appendHomeGoal, remove: removeHomeGoal } = 
+    useFieldArray({
+      control: form.control,
+      name: "homeGoals",
+    });
+  
+  const { fields: awayGoalFields, append: appendAwayGoal, remove: removeAwayGoal } = 
+    useFieldArray({
+      control: form.control,
+      name: "awayGoals",
+    });
+
+  const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
+      const processedValues = {
+        homeGoals: values.homeGoals.map(goal => ({
+          ...goal,
+          assistId: goal.assistId === "none" ? undefined : goal.assistId,
+        })),
+        awayGoals: values.awayGoals.map(goal => ({
+          ...goal,
+          assistId: goal.assistId === "none" ? undefined : goal.assistId,
+        })),
+      };
+
       const result = await updateMatchResult(seasonId, roundId, match.id, {
-        ...values
+        homeScore: processedValues.homeGoals.length,
+        awayScore: processedValues.awayGoals.length,
+        goals: {
+          home: processedValues.homeGoals,
+          away: processedValues.awayGoals,
+        },
       });
 
       if (result.success) {
-        toast.success("Résultat enregistré avec succès");
-        onSuccess();
+        toast.success("Résultat mis à jour avec succès");
         onOpenChange(false);
       } else {
-        toast.error(result.error?.message || "Erreur lors de l'enregistrement du résultat");
+        toast.error(result.error?.message || "Erreur lors de la mise à jour du résultat");
       }
     } catch (error) {
       console.error("Error updating match result:", error);
-      toast.error("Erreur lors de l'enregistrement du résultat");
+      toast.error("Erreur lors de la mise à jour du résultat");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const addGoal = (team: 'home' | 'away') => {
+    const newGoal = {
+      id: crypto.randomUUID(),
+      scorerId: '',
+      assistId: "none",
+    };
+
+    if (team === 'home') {
+      appendHomeGoal(newGoal);
+    } else {
+      appendAwayGoal(newGoal);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent className="max-w-[800px] h-[90vh] p-0 flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>Résultat du match</DialogTitle>
           <DialogDescription>
             {homeTeam.name} vs {awayTeam.name}
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <h3 className="font-medium">{homeTeam.name}</h3>
-                <FormField
-                  control={form.control}
-                  name="homeScore"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Score</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stats.homeTeam.possession"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Possession (%)</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} max={100} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stats.homeTeam.shots"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tirs</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stats.homeTeam.shotsOnTarget"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tirs cadrés</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stats.homeTeam.corners"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Corners</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stats.homeTeam.fouls"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fautes</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+        
+        <Separator />
 
-              <div className="space-y-4">
-                <h3 className="font-medium">{awayTeam.name}</h3>
-                <FormField
-                  control={form.control}
-                  name="awayScore"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Score</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stats.awayTeam.possession"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Possession (%)</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} max={100} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stats.awayTeam.shots"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tirs</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stats.awayTeam.shotsOnTarget"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tirs cadrés</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stats.awayTeam.corners"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Corners</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stats.awayTeam.fouls"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fautes</FormLabel>
-                      <FormControl>
-                        <Input type="number" min={0} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-x-scroll">
+            <div className="flex-1 min-h-0 px-6 py-4">
+              <div className="grid grid-cols-2 gap-8 h-full">
+                {/* Home Team Goals */}
+                <div className="flex flex-col min-h-0">
+                  <div className="sticky top-0 bg-background py-2 z-10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium">{homeTeam.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {homeGoalFields.length} but{homeGoalFields.length > 1 ? 's' : ''}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addGoal('home')}
+                        className="gap-2"
+                      >
+                        <IconPlus className="w-4 h-4" />
+                        Ajouter
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+                    {homeGoalFields.map((field, index) => (
+                      <Card key={field.id}>
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">But {index + 1}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeHomeGoal(index)}
+                            >
+                              <IconX className="w-4 h-4" />
+                            </Button>
+                          </div>
+
+                          <FormField
+                            control={form.control}
+                            name={`homeGoals.${index}.scorerId`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Buteur</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Sélectionner le buteur" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {homeTeam.members
+                                      .sort((a, b) => a.name.localeCompare(b.name))
+                                      .map((player) => (
+                                        <SelectItem key={player.id} value={player.id}>
+                                          {player.name}
+                                        </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`homeGoals.${index}.assistId`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Passeur (optionnel)</FormLabel>
+                                <Select
+                                  onValueChange={(value) => field.onChange(value)}
+                                  value={field.value || "none"}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Sélectionner le passeur" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="none">Aucun passeur</SelectItem>
+                                    {homeTeam.members
+                                      .sort((a, b) => a.name.localeCompare(b.name))
+                                      .map((player) => (
+                                        <SelectItem key={player.id} value={player.id}>
+                                          {player.name}
+                                        </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Away Team Goals */}
+                <div className="flex flex-col min-h-0">
+                  <div className="sticky top-0 bg-background py-2 z-10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium">{awayTeam.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {awayGoalFields.length} but{awayGoalFields.length > 1 ? 's' : ''}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addGoal('away')}
+                        className="gap-2"
+                      >
+                        <IconPlus className="w-4 h-4" />
+                        Ajouter
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+                    {awayGoalFields.map((field, index) => (
+                      <Card key={field.id}>
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">But {index + 1}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeAwayGoal(index)}
+                            >
+                              <IconX className="w-4 h-4" />
+                            </Button>
+                          </div>
+
+                          <FormField
+                            control={form.control}
+                            name={`awayGoals.${index}.scorerId`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Buteur</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Sélectionner le buteur" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {awayTeam.members
+                                      .sort((a, b) => a.name.localeCompare(b.name))
+                                      .map((player) => (
+                                        <SelectItem key={player.id} value={player.id}>
+                                          {player.name}
+                                        </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`awayGoals.${index}.assistId`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Passeur (optionnel)</FormLabel>
+                                <Select
+                                  onValueChange={(value) => field.onChange(value)}
+                                  value={field.value || "none"}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Sélectionner le passeur" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="none">Aucun passeur</SelectItem>
+                                    {awayTeam.members
+                                      .sort((a, b) => a.name.localeCompare(b.name))
+                                      .map((player) => (
+                                        <SelectItem key={player.id} value={player.id}>
+                                          {player.name}
+                                        </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isLoading}
-              >
-                Annuler
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Enregistrement..." : "Enregistrer"}
-              </Button>
+            <Separator />
+
+            <div className="p-4 bg-background mt-auto">
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isLoading}
+                >
+                  Annuler
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Enregistrement..." : "Enregistrer"}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>
