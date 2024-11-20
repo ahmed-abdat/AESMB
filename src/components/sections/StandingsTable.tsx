@@ -18,7 +18,7 @@ interface StandingsTableProps {
 
 export function StandingsTable({ standings, teams }: StandingsTableProps) {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border mb-10 my-4">
       <Table>
         <TableHeader>
           <TableRow>

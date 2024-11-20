@@ -45,7 +45,7 @@ export function UpcomingMatches({ season }: UpcomingMatchesProps) {
 
   return (
     <section className="py-12">
-      <div className="container">
+      <div className="w-full mx-auto px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

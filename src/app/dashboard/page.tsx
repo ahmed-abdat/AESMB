@@ -64,7 +64,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold">Tableau de Bord</h1>
         <p className="text-muted-foreground">
-          Bienvenue dans l'interface d'administration de AESMB League
+          Bienvenue dans l&apos;interface d&apos;administration de AESMB League
         </p>
       </div>
 

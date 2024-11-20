@@ -83,7 +83,7 @@ export function AddTeamMemberDialog({
         <DialogHeader>
           <DialogTitle>Ajouter un joueur</DialogTitle>
           <DialogDescription>
-            Ajoutez un nouveau joueur à l'équipe
+            Ajoutez un nouveau joueur à l&apos;équipe
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

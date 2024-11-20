@@ -153,7 +153,7 @@ export function EditMatchDialog({
                 name="awayTeamId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Équipe à l'extérieur</FormLabel>
+                    <FormLabel>Équipe à l&apos;extérieur</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}

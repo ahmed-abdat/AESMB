@@ -180,7 +180,7 @@ export function AddTeamDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom de l'équipe</FormLabel>
+                  <FormLabel>Nom de l&apos;équipe</FormLabel>
                   <FormControl>
                     <Input placeholder="FC Barcelona" {...field} />
                   </FormControl>
@@ -194,7 +194,7 @@ export function AddTeamDialog({
               name="logo"
               render={({ field: { value, onChange, ...field } }) => (
                 <FormItem>
-                  <FormLabel>Logo de l'équipe</FormLabel>
+                  <FormLabel>Logo de l&apos;équipe</FormLabel>
                   <FormControl>
                     <div className="space-y-4">
                       <div className="flex items-center justify-center">

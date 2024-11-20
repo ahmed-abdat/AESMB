@@ -186,9 +186,9 @@ export function TeamsSection({ teams, onUpdate }: TeamsSectionProps) {
             title="Supprimer l'équipe"
             description={
               <>
-                <p>Êtes-vous sûr de vouloir supprimer l'équipe "{selectedTeam.name}" ?</p>
+                <p>Êtes-vous sûr de vouloir supprimer l&apos;équipe &quot;{selectedTeam.name}&quot; ?</p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Cette action est irréversible et supprimera également le logo de l'équipe.
+                  Cette action est irréversible et supprimera également le logo de l&apos;équipe.
                 </p>
               </>
             }

@@ -9,7 +9,7 @@ import Image from 'next/image';
 
 const menuItems = [
   { href: '/schedule', label: 'Calendrier' },
-  { href: '/statistics', label: 'Statistiques' },
+  // { href: '/statistics', label: 'Statistiques' },
   { href: '/standings', label: 'Classement' },
   { href: '/teams', label: 'Équipes' },
   { href: '/results', label: 'Résultats' },

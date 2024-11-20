@@ -174,9 +174,9 @@ export function EditTeamDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Modifier l'équipe</DialogTitle>
+          <DialogTitle>Modifier l&apos;équipe</DialogTitle>
           <DialogDescription>
-            Modifiez les informations de l'équipe
+            Modifiez les informations de l&apos;équipe
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -186,7 +186,7 @@ export function EditTeamDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom de l'équipe</FormLabel>
+                  <FormLabel>Nom de l&apos;équipe</FormLabel>
                   <FormControl>
                     <Input placeholder="FC Barcelona" {...field} />
                   </FormControl>
@@ -200,7 +200,7 @@ export function EditTeamDialog({
               name="logo"
               render={({ field: { value, onChange, ...field } }) => (
                 <FormItem>
-                  <FormLabel>Logo de l'équipe</FormLabel>
+                  <FormLabel>Logo de l&apos;équipe</FormLabel>
                   <FormControl>
                     <div className="space-y-4">
                       <div className="flex items-center justify-center">

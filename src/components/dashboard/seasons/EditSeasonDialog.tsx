@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
 import { isAfter } from "date-fns";
 import { updateSeason } from "@/app/actions/seasons";
-import { Season, SeasonFormData } from "@/@types/season";
+import { Season, SeasonFormData } from "@/types/season";
 
 const formSchema = z
   .object({
