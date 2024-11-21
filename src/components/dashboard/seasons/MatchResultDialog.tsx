@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -84,6 +84,21 @@ export function MatchResultDialog({
     },
   });
 
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        homeGoals: match.result?.goals?.home.map(goal => ({
+          ...goal,
+          assistId: goal.assistId || "none",
+        })) || [],
+        awayGoals: match.result?.goals?.away.map(goal => ({
+          ...goal,
+          assistId: goal.assistId || "none",
+        })) || [],
+      });
+    }
+  }, [open, match, form]);
+
   const { fields: homeGoalFields, append: appendHomeGoal, remove: removeHomeGoal } = 
     useFieldArray({
       control: form.control,
@@ -95,6 +110,11 @@ export function MatchResultDialog({
       control: form.control,
       name: "awayGoals",
     });
+
+  const handleClose = () => {
+    form.reset();
+    onOpenChange(false);
+  };
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
@@ -121,6 +141,7 @@ export function MatchResultDialog({
 
       if (result.success) {
         toast.success("Résultat mis à jour avec succès");
+        form.reset();
         onOpenChange(false);
       } else {
         toast.error(result.error?.message || "Erreur lors de la mise à jour du résultat");
@@ -148,7 +169,7 @@ export function MatchResultDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-[800px] h-[90vh] p-0 flex flex-col">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>Résultat du match</DialogTitle>
@@ -382,7 +403,7 @@ export function MatchResultDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => onOpenChange(false)}
+                  onClick={handleClose}
                   disabled={isLoading}
                 >
                   Annuler

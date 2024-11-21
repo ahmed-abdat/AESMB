@@ -569,58 +569,51 @@ export async function updateMatchResult(
       };
     }
 
-    // Reset old stats if match was completed
+    const homeTeamData = { ...homeTeamDoc.data() };
+    const awayTeamData = { ...awayTeamDoc.data() };
+
+    // First, reset all stats if match was completed
     if (oldMatch.status === 'completed' && oldMatch.result) {
-      const homeTeamData = homeTeamDoc.data();
-      const awayTeamData = awayTeamDoc.data();
-      
-      // Remove old home team stats
+      // Reset home team stats
       oldMatch.result.goals.home.forEach((goal: Goal) => {
         const scorerIndex = homeTeamData.members.findIndex((m: any) => m.id === goal.scorerId);
         if (scorerIndex !== -1) {
-          homeTeamData.members[scorerIndex].stats.goals--;
+          homeTeamData.members[scorerIndex].stats.goals = Math.max(0, (homeTeamData.members[scorerIndex].stats.goals || 0) - 1);
         }
         if (goal.assistId) {
           const assisterIndex = homeTeamData.members.findIndex((m: any) => m.id === goal.assistId);
           if (assisterIndex !== -1) {
-            homeTeamData.members[assisterIndex].stats.assists--;
+            homeTeamData.members[assisterIndex].stats.assists = Math.max(0, (homeTeamData.members[assisterIndex].stats.assists || 0) - 1);
           }
         }
       });
 
-      // Remove old away team stats
+      // Reset away team stats
       oldMatch.result.goals.away.forEach((goal: Goal) => {
         const scorerIndex = awayTeamData.members.findIndex((m: any) => m.id === goal.scorerId);
         if (scorerIndex !== -1) {
-          awayTeamData.members[scorerIndex].stats.goals--;
+          awayTeamData.members[scorerIndex].stats.goals = Math.max(0, (awayTeamData.members[scorerIndex].stats.goals || 0) - 1);
         }
         if (goal.assistId) {
           const assisterIndex = awayTeamData.members.findIndex((m: any) => m.id === goal.assistId);
           if (assisterIndex !== -1) {
-            awayTeamData.members[assisterIndex].stats.assists--;
+            awayTeamData.members[assisterIndex].stats.assists = Math.max(0, (awayTeamData.members[assisterIndex].stats.assists || 0) - 1);
           }
         }
       });
-
-      // Update teams with reset stats
-      batch.update(homeTeamRef, { members: homeTeamData.members });
-      batch.update(awayTeamRef, { members: awayTeamData.members });
     }
 
-    // Add new stats
-    const homeTeamData = homeTeamDoc.data();
-    const awayTeamData = awayTeamDoc.data();
-
+    // Then, add new stats
     // Update home team stats
     data.goals.home.forEach((goal) => {
       const scorerIndex = homeTeamData.members.findIndex((m: any) => m.id === goal.scorerId);
       if (scorerIndex !== -1) {
-        homeTeamData.members[scorerIndex].stats.goals++;
+        homeTeamData.members[scorerIndex].stats.goals = (homeTeamData.members[scorerIndex].stats.goals || 0) + 1;
       }
       if (goal.assistId) {
         const assisterIndex = homeTeamData.members.findIndex((m: any) => m.id === goal.assistId);
         if (assisterIndex !== -1) {
-          homeTeamData.members[assisterIndex].stats.assists++;
+          homeTeamData.members[assisterIndex].stats.assists = (homeTeamData.members[assisterIndex].stats.assists || 0) + 1;
         }
       }
     });
@@ -629,19 +622,19 @@ export async function updateMatchResult(
     data.goals.away.forEach((goal) => {
       const scorerIndex = awayTeamData.members.findIndex((m: any) => m.id === goal.scorerId);
       if (scorerIndex !== -1) {
-        awayTeamData.members[scorerIndex].stats.goals++;
+        awayTeamData.members[scorerIndex].stats.goals = (awayTeamData.members[scorerIndex].stats.goals || 0) + 1;
       }
       if (goal.assistId) {
         const assisterIndex = awayTeamData.members.findIndex((m: any) => m.id === goal.assistId);
         if (assisterIndex !== -1) {
-          awayTeamData.members[assisterIndex].stats.assists++;
+          awayTeamData.members[assisterIndex].stats.assists = (awayTeamData.members[assisterIndex].stats.assists || 0) + 1;
         }
       }
     });
 
-    // Update match with result and status
-    const updatedMatch = {
-      ...rounds[roundIndex].matches[matchIndex],
+    // Update match with new result
+    rounds[roundIndex].matches[matchIndex] = {
+      ...oldMatch,
       status: 'completed' as const,
       result: {
         homeScore: data.homeScore,
@@ -649,8 +642,6 @@ export async function updateMatchResult(
         goals: data.goals,
       },
     };
-
-    rounds[roundIndex].matches[matchIndex] = updatedMatch;
 
     // Add all updates to batch
     batch.update(seasonRef, { rounds });
@@ -675,6 +666,9 @@ export async function updateMatchResult(
 
 export async function resetMatchResult(seasonId: string, roundId: string, matchId: string) {
   try {
+    const batch = writeBatch(db);
+
+    // Get the season document
     const seasonRef = doc(db, "seasons", seasonId);
     const seasonDoc = await getDoc(seasonRef);
 
@@ -703,14 +697,80 @@ export async function resetMatchResult(seasonId: string, roundId: string, matchI
       };
     }
 
+    const match = rounds[roundIndex].matches[matchIndex];
+
+    // Only proceed if the match was completed and has results
+    if (match.status === 'completed' && match.result) {
+      // Get teams to update player stats
+      const homeTeamRef = doc(db, "teams", match.homeTeamId);
+      const awayTeamRef = doc(db, "teams", match.awayTeamId);
+      const [homeTeamDoc, awayTeamDoc] = await Promise.all([
+        getDoc(homeTeamRef),
+        getDoc(awayTeamRef)
+      ]);
+
+      if (!homeTeamDoc.exists() || !awayTeamDoc.exists()) {
+        return {
+          success: false,
+          error: {
+            message: "Équipe non trouvée",
+            code: "not_found" as const,
+          },
+        };
+      }
+
+      const homeTeamData = homeTeamDoc.data();
+      const awayTeamData = awayTeamDoc.data();
+
+      // Reset home team player stats
+      match.result.goals.home.forEach((goal: Goal) => {
+        // Reset scorer's goals
+        const scorerIndex = homeTeamData.members.findIndex((m: any) => m.id === goal.scorerId);
+        if (scorerIndex !== -1) {
+          homeTeamData.members[scorerIndex].stats.goals--;
+        }
+        // Reset assister's assists
+        if (goal.assistId) {
+          const assisterIndex = homeTeamData.members.findIndex((m: any) => m.id === goal.assistId);
+          if (assisterIndex !== -1) {
+            homeTeamData.members[assisterIndex].stats.assists--;
+          }
+        }
+      });
+
+      // Reset away team player stats
+      match.result.goals.away.forEach((goal: Goal) => {
+        // Reset scorer's goals
+        const scorerIndex = awayTeamData.members.findIndex((m: any) => m.id === goal.scorerId);
+        if (scorerIndex !== -1) {
+          awayTeamData.members[scorerIndex].stats.goals--;
+        }
+        // Reset assister's assists
+        if (goal.assistId) {
+          const assisterIndex = awayTeamData.members.findIndex((m: any) => m.id === goal.assistId);
+          if (assisterIndex !== -1) {
+            awayTeamData.members[assisterIndex].stats.assists--;
+          }
+        }
+      });
+
+      // Update teams with reset stats
+      batch.update(homeTeamRef, { members: homeTeamData.members });
+      batch.update(awayTeamRef, { members: awayTeamData.members });
+    }
+
     // Reset match by removing result and setting status back to scheduled
-    const { result, ...matchWithoutResult } = rounds[roundIndex].matches[matchIndex];
+    const { result, ...matchWithoutResult } = match;
     rounds[roundIndex].matches[matchIndex] = {
       ...matchWithoutResult,
       status: 'scheduled' as const
     };
 
-    await updateDoc(seasonRef, { rounds });
+    // Update season with reset match
+    batch.update(seasonRef, { rounds });
+
+    // Commit all updates
+    await batch.commit();
 
     return { success: true };
   } catch (error) {
