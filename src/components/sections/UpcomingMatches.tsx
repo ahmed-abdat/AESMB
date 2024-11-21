@@ -2,11 +2,11 @@
 
 import { motion } from "framer-motion";
 import { MatchCard } from "../matches/MatchCard";
-import { SeasonFirestore } from "@/types/season";
+import { Season } from "@/types/season";
 import { useMemo } from "react";
 
 interface UpcomingMatchesProps {
-  season?: SeasonFirestore & { id: string };
+  season: Season | undefined;
 }
 
 export function UpcomingMatches({ season }: UpcomingMatchesProps) {

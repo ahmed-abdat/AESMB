@@ -4,11 +4,11 @@ import { Button } from "./ui/button";
 import { motion } from "framer-motion";
 import { IconCalendarStats, IconTrophy } from "@tabler/icons-react";
 import Link from "next/link";
-import { SeasonFirestore } from "@/types/season";
+import { Season } from "@/types/season";
 
 interface HeroProps {
   seasonName: string;
-  season?: SeasonFirestore & { id: string };
+  season: Season | undefined;
 }
 
 export function Hero({ seasonName, season }: HeroProps) {

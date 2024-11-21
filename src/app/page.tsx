@@ -4,7 +4,8 @@ import { StandingsTable } from '@/components/sections/StandingsTable';
 import { getCurrentSeason } from './actions/seasons';
 import { getTeams } from './actions/teams';
 import { calculateStandings } from '@/lib/standings';
-import { Standing } from '@/types/season';
+import { Standing, Season } from '@/types/season';
+import { Timestamp } from 'firebase/firestore';
 
 export default async function Home() {
   const { success: seasonSuccess, season: fetchedSeason } = await getCurrentSeason();
@@ -14,12 +15,7 @@ export default async function Home() {
   // Convert season for standings calculation if needed
   let standings: Standing[] = [];
   if (seasonSuccess && fetchedSeason && teamsSuccess && teams) {
-    const season = {
-      ...fetchedSeason,
-      startDate: fetchedSeason.startDate.toDate(),
-      endDate: fetchedSeason.endDate.toDate(),
-    };
-    standings = calculateStandings(season, teams);
+    standings = calculateStandings(fetchedSeason, teams);
   }
 
   return (
