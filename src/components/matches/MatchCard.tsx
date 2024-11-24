@@ -5,12 +5,37 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useTeam } from "@/hooks/useTeam";
 import Image from "next/image";
+import { IconPhotoOff } from "@tabler/icons-react";
+import { useState } from "react";
 
 interface MatchCardProps {
   homeTeamId: string;
   awayTeamId: string;
   matchDate: Date;
   status: 'scheduled' | 'completed' | 'cancelled';
+}
+
+function TeamLogo({ src, alt }: { src: string; alt: string }) {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <div className="relative w-12 h-12">
+      {imageError ? (
+        <div className="w-12 h-12 bg-muted flex items-center justify-center rounded-md">
+          <IconPhotoOff className="w-6 h-6 text-muted-foreground" />
+        </div>
+      ) : (
+        <Image
+          src={src || '/placeholder-team.png'}
+          alt={alt}
+          fill
+          sizes="(max-width: 48px) 100vw, 48px"
+          className="object-contain"
+          onError={() => setImageError(true)}
+        />
+      )}
+    </div>
+  );
 }
 
 export function MatchCard({ homeTeamId, awayTeamId, matchDate, status }: MatchCardProps) {
@@ -26,31 +51,13 @@ export function MatchCard({ homeTeamId, awayTeamId, matchDate, status }: MatchCa
       <div className="flex flex-col space-y-3 md:space-y-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2 md:space-x-3">
-            <div className="relative w-6 h-6 md:w-8 md:h-8">
-              <Image
-                src={homeTeam.logo}
-                alt={homeTeam.name}
-                fill
-                sizes="(max-width: 768px) 24px, 32px"
-                className="object-contain"
-                priority
-              />
-            </div>
+            <TeamLogo src={homeTeam.logo} alt={homeTeam.name} />
             <span className="text-sm md:text-base font-semibold">{homeTeam.name}</span>
           </div>
           <span className="text-sm md:text-base">vs</span>
           <div className="flex items-center space-x-2 md:space-x-3">
             <span className="text-sm md:text-base font-semibold">{awayTeam.name}</span>
-            <div className="relative w-6 h-6 md:w-8 md:h-8">
-              <Image
-                src={awayTeam.logo}
-                alt={awayTeam.name}
-                fill
-                sizes="(max-width: 768px) 24px, 32px"
-                className="object-contain"
-                priority
-              />
-            </div>
+            <TeamLogo src={awayTeam.logo} alt={awayTeam.name} />
           </div>
         </div>
         <div className="text-xs md:text-sm text-muted-foreground text-center">

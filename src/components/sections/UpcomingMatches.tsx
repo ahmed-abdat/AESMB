@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { MatchCard } from "../matches/MatchCard";
 import { Season } from "@/types/season";
-import { useMemo } from "react";
+import { useMemo, Suspense } from "react";
 
 interface UpcomingMatchesProps {
   season: Season | undefined;
@@ -58,15 +58,23 @@ export function UpcomingMatches({ season }: UpcomingMatchesProps) {
             </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingMatches.map((match) => (
-              <MatchCard
-                key={match.id}
-                homeTeamId={match.homeTeamId}
-                awayTeamId={match.awayTeamId}
-                matchDate={new Date(match.date)}
-                status={match.status}
-              />
-            ))}
+            <Suspense 
+              fallback={
+                <div className="col-span-full text-center py-8">
+                  Chargement des matchs...
+                </div>
+              }
+            >
+              {upcomingMatches.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  homeTeamId={match.homeTeamId}
+                  awayTeamId={match.awayTeamId}
+                  matchDate={new Date(match.date)}
+                  status={match.status}
+                />
+              ))}
+            </Suspense>
           </div>
         </motion.div>
       </div>

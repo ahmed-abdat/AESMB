@@ -23,6 +23,23 @@ interface ResultsSectionProps {
   teams: Team[];
 }
 
+function TeamLogo({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="relative w-12 h-12 mx-auto">
+      <Image
+        src={src || '/placeholder-team.png'}
+        alt={alt}
+        fill
+        sizes="(max-width: 48px) 100vw, 48px"
+        className="object-contain"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = '/placeholder-team.png';
+        }}
+      />
+    </div>
+  );
+}
+
 export function ResultsSection({ season, teams }: ResultsSectionProps) {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [selectedRound, setSelectedRound] = useState<string>("all");
@@ -122,10 +139,6 @@ export function ResultsSection({ season, teams }: ResultsSectionProps) {
                       const isHighlighted = selectedTeam !== "all" && 
                         (match.homeTeamId === selectedTeam || match.awayTeamId === selectedTeam);
 
-                      // Get goals safely
-                      const homeGoals = match.result?.goals?.home || [];
-                      const awayGoals = match.result?.goals?.away || [];
-
                       return (
                         <Card 
                           key={match.id}
@@ -144,15 +157,10 @@ export function ResultsSection({ season, teams }: ResultsSectionProps) {
 
                               <div className="grid grid-cols-3 items-center gap-4">
                                 <div className="text-center space-y-2">
-                                  <div className="relative w-12 h-12 mx-auto">
-                                    <Image
-                                      src={homeTeam?.logo || ""}
-                                      alt={homeTeam?.name || ""}
-                                      fill
-                                      sizes="(max-width: 48px) 100vw, 48px"
-                                      className="object-contain"
-                                    />
-                                  </div>
+                                  <TeamLogo
+                                    src={homeTeam?.logo || ""}
+                                    alt={homeTeam?.name || ""}
+                                  />
                                   <p className="text-sm font-medium">
                                     {homeTeam?.name}
                                   </p>
@@ -168,57 +176,14 @@ export function ResultsSection({ season, teams }: ResultsSectionProps) {
                                 </div>
 
                                 <div className="text-center space-y-2">
-                                  <div className="relative w-12 h-12 mx-auto">
-                                    <Image
-                                      src={awayTeam?.logo || ""}
-                                      alt={awayTeam?.name || ""}
-                                      fill
-                                      sizes="(max-width: 48px) 100vw, 48px"
-                                      className="object-contain"
-                                    />
-                                  </div>
+                                  <TeamLogo
+                                    src={awayTeam?.logo || ""}
+                                    alt={awayTeam?.name || ""}
+                                  />
                                   <p className="text-sm font-medium">
                                     {awayTeam?.name}
                                   </p>
                                 </div>
-                              </div>
-
-                              {/* Show scorers with safe access */}
-                              <div className="text-sm text-muted-foreground space-y-2">
-                                {homeGoals.length > 0 && (
-                                  <div>
-                                    <span className="font-medium">{homeTeam?.name}:</span>{" "}
-                                    {homeGoals.map((goal, index) => {
-                                      const scorer = homeTeam?.members.find(m => m.id === goal.scorerId);
-                                      const assister = goal.assistId ? 
-                                        homeTeam?.members.find(m => m.id === goal.assistId) : null;
-                                      return (
-                                        <span key={goal.id}>
-                                          {scorer?.name}
-                                          {assister && ` (${assister.name})`}
-                                          {index < homeGoals.length - 1 ? ", " : ""}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                                {awayGoals.length > 0 && (
-                                  <div>
-                                    <span className="font-medium">{awayTeam?.name}:</span>{" "}
-                                    {awayGoals.map((goal, index) => {
-                                      const scorer = awayTeam?.members.find(m => m.id === goal.scorerId);
-                                      const assister = goal.assistId ? 
-                                        awayTeam?.members.find(m => m.id === goal.assistId) : null;
-                                      return (
-                                        <span key={goal.id}>
-                                          {scorer?.name}
-                                          {assister && ` (${assister.name})`}
-                                          {index < awayGoals.length - 1 ? ", " : ""}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                )}
                               </div>
                             </div>
                           </CardContent>

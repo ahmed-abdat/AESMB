@@ -5,7 +5,7 @@ import { Team } from "@/types/team";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { IconCalendar } from "@tabler/icons-react";
+import { IconCalendar, IconPhotoOff } from "@tabler/icons-react";
 import { getSeasonTeams } from "@/app/actions/seasons";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +13,23 @@ import Image from "next/image";
 
 interface ScheduleSectionProps {
   season: Season;
+}
+
+function TeamLogo({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="relative w-12 h-12 mx-auto">
+      <Image
+        src={src || '/logo.jpg'}
+        alt={alt}
+        fill
+        sizes="(max-width: 48px) 100vw, 48px"
+        className="object-contain"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = '/logo.jpg';
+        }}
+      />
+    </div>
+  );
 }
 
 export function ScheduleSection({ season }: ScheduleSectionProps) {
@@ -66,15 +83,10 @@ export function ScheduleSection({ season }: ScheduleSectionProps) {
 
                         <div className="grid grid-cols-3 items-center gap-4">
                           <div className="text-center space-y-2">
-                            <div className="relative w-12 h-12 mx-auto">
-                              <Image
-                                src={getTeamLogo(match.homeTeamId)}
-                                alt={getTeamName(match.homeTeamId)}
-                                fill
-                                sizes="(max-width: 48px) 100vw, 48px"
-                                className="object-contain"
-                              />
-                            </div>
+                            <TeamLogo 
+                              src={getTeamLogo(match.homeTeamId)}
+                              alt={getTeamName(match.homeTeamId)}
+                            />
                             <p className="text-sm font-medium">
                               {getTeamName(match.homeTeamId)}
                             </p>
@@ -96,15 +108,10 @@ export function ScheduleSection({ season }: ScheduleSectionProps) {
                           </div>
 
                           <div className="text-center space-y-2">
-                            <div className="relative w-12 h-12 mx-auto">
-                              <Image
-                                src={getTeamLogo(match.awayTeamId)}
-                                alt={getTeamName(match.awayTeamId)}
-                                fill
-                                sizes="(max-width: 48px) 100vw, 48px"
-                                className="object-contain"
-                              />
-                            </div>
+                            <TeamLogo 
+                              src={getTeamLogo(match.awayTeamId)}
+                              alt={getTeamName(match.awayTeamId)}
+                            />
                             <p className="text-sm font-medium">
                               {getTeamName(match.awayTeamId)}
                             </p>
