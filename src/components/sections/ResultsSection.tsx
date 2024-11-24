@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
 
 interface ResultsSectionProps {
   season: Season;
@@ -43,6 +44,7 @@ function TeamLogo({ src, alt }: { src: string; alt: string }) {
 export function ResultsSection({ season, teams }: ResultsSectionProps) {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [selectedRound, setSelectedRound] = useState<string>("all");
+  const router = useRouter();
 
   // Helper function to get team details
   const getTeam = (teamId: string) => {
@@ -142,7 +144,8 @@ export function ResultsSection({ season, teams }: ResultsSectionProps) {
                       return (
                         <Card 
                           key={match.id}
-                          className={isHighlighted ? "border-primary" : ""}
+                          className={`${isHighlighted ? "border-primary" : ""} cursor-pointer hover:bg-muted/50 transition-colors`}
+                          onClick={() => router.push(`/matches/${match.id}`)}
                         >
                           <CardContent className="p-6">
                             <div className="flex flex-col space-y-4">
