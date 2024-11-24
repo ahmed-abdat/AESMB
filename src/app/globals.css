@@ -129,3 +129,118 @@
     }
   
 }
+
+@layer components {
+  /* Modern Loading Animation */
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .loading-spinner {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      hsl(var(--background)),
+      hsl(var(--primary)),
+      hsl(var(--background))
+    );
+    animation: spin 1.5s linear infinite;
+  }
+
+  .loading-spinner::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    background: hsl(var(--background));
+  }
+
+  .loading-ball {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: hsl(var(--primary));
+    border-radius: 50%;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: bounce 1.5s ease-in-out infinite;
+  }
+
+  .loading-text {
+    color: hsl(var(--primary));
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateX(-50%) scale(1);
+    }
+    50% {
+      transform: translateX(-50%) scale(1.2);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Dark mode adjustments */
+  .dark .loading-spinner {
+    background: conic-gradient(
+      from 0deg,
+      hsl(var(--background)),
+      hsl(var(--primary)/0.8),
+      hsl(var(--background))
+    );
+  }
+
+  .dark .loading-ball {
+    background: hsl(var(--primary)/0.8);
+  }
+
+  .dark .loading-text {
+    color: hsl(var(--primary)/0.8);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+    }
+
+    .loading-ball {
+      width: 10px;
+      height: 10px;
+      top: -5px;
+    }
+
+    .loading-text {
+      font-size: 0.75rem;
+    }
+  }
+}
