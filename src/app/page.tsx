@@ -4,8 +4,9 @@ import { StandingsTable } from '@/components/sections/StandingsTable';
 import { getCurrentSeason } from './actions/seasons';
 import { getTeams } from './actions/teams';
 import { calculateStandings } from '@/lib/standings';
-import { Standing, Season } from '@/types/season';
-import { Timestamp } from 'firebase/firestore';
+import { Standing } from '@/types/season';
+
+export const revalidate = 60;
 
 export default async function Home() {
   const { success: seasonSuccess, season: fetchedSeason } = await getCurrentSeason();

@@ -3,6 +3,7 @@ import { getTeams } from "@/app/actions/teams";
 import { ResultsSection } from "@/components/sections/ResultsSection";
 import { IconCalendarStats } from "@tabler/icons-react";
 import { Suspense } from "react";
+export const revalidate = 60;
 
 export default async function ResultsPage() {
   const { success: seasonSuccess, season: fetchedSeason } = await getCurrentSeason();

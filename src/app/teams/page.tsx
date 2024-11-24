@@ -1,7 +1,7 @@
 import { getTeams } from "@/app/actions/teams";
 import { TeamsOverviewSection } from "@/components/sections/TeamsOverviewSection";
 import { IconUsers } from "@tabler/icons-react";
-
+export const revalidate = 60;
 export default async function TeamsPage() {
   const { success, teams } = await getTeams();
 

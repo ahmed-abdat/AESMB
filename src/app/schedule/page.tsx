@@ -2,7 +2,7 @@ import { getCurrentSeason } from "@/app/actions/seasons";
 import { ScheduleSection } from "@/components/sections/ScheduleSection";
 import { Suspense } from "react";
 import { IconCalendar } from "@tabler/icons-react";
-
+export const revalidate = 60;
 export default async function SchedulePage() {
   const { success, season } = await getCurrentSeason();
 

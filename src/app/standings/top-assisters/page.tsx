@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { IconArrowLeft } from "@tabler/icons-react";
+export const revalidate = 60;
 
 export default async function TopAssistersPage() {
   const { success: seasonSuccess, season } = await getCurrentSeason();
