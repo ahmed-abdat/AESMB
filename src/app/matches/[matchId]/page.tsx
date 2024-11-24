@@ -3,8 +3,9 @@ import { getTeams } from "@/app/actions/teams";
 import { MatchDetailsSection } from "@/components/sections/MatchDetailsSection";
 import { IconBallFootball } from "@tabler/icons-react";
 import { notFound } from "next/navigation";
+import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
 
-export const revalidate = 60;
+export const revalidate = NEXT_REVALIDATE_TIME;
 
 interface MatchPageProps {
   params: {

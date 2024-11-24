@@ -3,7 +3,9 @@ import { TeamDetailsSection } from "@/components/sections/TeamDetailsSection";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-export const revalidate = 60;
+import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
+
+export const revalidate = NEXT_REVALIDATE_TIME;
 
 export default async function TeamPage({
   params,

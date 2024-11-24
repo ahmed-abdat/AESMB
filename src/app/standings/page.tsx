@@ -4,7 +4,9 @@ import { StandingsSection } from "@/components/sections/StandingsSection";
 import { calculateStandings } from "@/lib/standings";
 import { IconTrophy } from "@tabler/icons-react";
 import { Suspense } from "react";
-export const revalidate = 60;
+import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
+
+export const revalidate = NEXT_REVALIDATE_TIME;
 
 export default async function StandingsPage() {
   const { success: seasonSuccess, season: fetchedSeason } = await getCurrentSeason();

@@ -5,8 +5,9 @@ import { getCurrentSeason } from './actions/seasons';
 import { getTeams } from './actions/teams';
 import { calculateStandings } from '@/lib/standings';
 import { Standing } from '@/types/season';
+import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
 
-export const revalidate = 60;
+export const revalidate = NEXT_REVALIDATE_TIME;
 
 export default async function Home() {
   const { success: seasonSuccess, season: fetchedSeason } = await getCurrentSeason();

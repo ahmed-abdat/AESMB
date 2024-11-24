@@ -13,7 +13,9 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { IconArrowLeft } from "@tabler/icons-react";
-export const revalidate = 60;
+import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
+
+export const revalidate = NEXT_REVALIDATE_TIME;
 
 export default async function TopScorersPage() {
   const { success: seasonSuccess, season } = await getCurrentSeason();
