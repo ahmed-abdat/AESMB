@@ -14,6 +14,11 @@ export default async function Home() {
   const { success: teamsSuccess, teams } = await getTeams();
   const seasonName = seasonSuccess && fetchedSeason ? fetchedSeason.name : '';
 
+  // Filter teams participating in current season
+  const participatingTeams = teamsSuccess && teams && fetchedSeason 
+    ? teams.filter(team => team.seasons.includes(fetchedSeason.id))
+    : [];
+
   // Convert season for standings calculation if needed
   let standings: Standing[] = [];
   if (seasonSuccess && fetchedSeason && teamsSuccess && teams) {
@@ -22,7 +27,11 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen px-4 md:px-8">
-      <Hero seasonName={seasonName} season={fetchedSeason} />
+      <Hero 
+        seasonName={seasonName} 
+        season={fetchedSeason} 
+        participatingTeams={participatingTeams}
+      />
       <UpcomingMatches season={fetchedSeason} />
       {teams && standings.length > 0 && (
         <StandingsTable standings={standings} teams={teams} />

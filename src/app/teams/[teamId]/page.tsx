@@ -1,9 +1,11 @@
 import { getTeam } from "@/app/actions/teams";
+import { getAllSeasons } from "@/app/actions/seasons";
 import { TeamDetailsSection } from "@/components/sections/TeamDetailsSection";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
+import { NEXT_REVALIDATE_TIME } from "@/constants/next_revalidat_time";
+import { Season } from "@/types/season";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
 
@@ -13,6 +15,7 @@ export default async function TeamPage({
   params: { teamId: string };
 }) {
   const { success, team } = await getTeam(params.teamId);
+  const { seasons } = await getAllSeasons();
 
   if (!success || !team) {
     return (
@@ -23,6 +26,15 @@ export default async function TeamPage({
       </main>
     );
   }
+
+  // Filter seasons where the team has matches
+  const teamSeasons = seasons.filter((season: Season) =>
+    season.rounds.some((round) =>
+      round.matches.some(
+        (match) => match.homeTeamId === team.id || match.awayTeamId === team.id
+      )
+    )
+  );
 
   return (
     <main className="min-h-screen pt-16">
@@ -38,8 +50,8 @@ export default async function TeamPage({
       </div>
 
       <div className="py-4 md:py-8 px-4 md:px-8">
-        <TeamDetailsSection team={team} />
+        <TeamDetailsSection team={team} seasons={teamSeasons} />
       </div>
     </main>
   );
-} 
+}

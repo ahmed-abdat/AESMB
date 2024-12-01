@@ -5,22 +5,23 @@ import { motion } from "framer-motion";
 import { IconCalendarStats, IconTrophy } from "@tabler/icons-react";
 import Link from "next/link";
 import { Season } from "@/types/season";
+import { Team } from "@/types/team";
 
 interface HeroProps {
   seasonName: string;
   season: Season | undefined;
+  participatingTeams: Team[];
 }
 
-export function Hero({ seasonName, season }: HeroProps) {
-  // Calculate number of teams and matches
-  const numberOfTeams = season?.teams?.length || 5;
+export function Hero({ seasonName, season, participatingTeams }: HeroProps) {
+  const numberOfTeams = participatingTeams.length || 5;
   const numberOfRounds = season?.rounds?.length || 5;
+  
   // Count total matches from all rounds
-  const totalMatches =
-    season?.rounds?.reduce(
-      (total, round) => total + (round.matches?.length || 0),
-      0
-    ) || 20;
+  const totalMatches = season?.rounds?.reduce(
+    (total, round) => total + (round.matches?.length || 0),
+    0
+  ) || 20;
 
   // Find the next round date
   const nextRound = season?.rounds

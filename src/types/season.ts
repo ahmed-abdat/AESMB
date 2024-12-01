@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 
-export type SeasonStatus = 'upcoming' | 'ongoing' | 'completed';
+export type SeasonStatus = "upcoming" | "ongoing" | "completed";
 
 export interface PointsSystem {
   win: number;
@@ -16,7 +16,8 @@ export interface SeasonFormData {
 
 export interface Goal {
   id: string;
-  scorerId: string;
+  type: "regular" | "own";
+  scorerId?: string;
   assistId?: string;
 }
 
@@ -42,7 +43,7 @@ export interface Match {
   homeTeamId: string;
   awayTeamId: string;
   date: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: "scheduled" | "completed" | "cancelled";
   result?: MatchResult;
 }
 
@@ -62,7 +63,7 @@ export interface TeamStats {
   goalsAgainst: number;
   goalDifference: number;
   points: number;
-  form: ('W' | 'D' | 'L')[];
+  form: ("W" | "D" | "L")[];
 }
 
 export interface Standing {
@@ -77,7 +78,6 @@ export interface Season {
   endDate: Date;
   status: SeasonStatus;
   pointsSystem: PointsSystem;
-  teams: string[];
   rounds: Round[];
 }
 
@@ -87,7 +87,6 @@ export interface SeasonFirestore {
   endDate: Timestamp;
   status: SeasonStatus;
   pointsSystem: PointsSystem;
-  teams: string[];
   rounds: Round[];
   createdAt?: Timestamp;
 }
@@ -110,7 +109,6 @@ export function convertFirestoreDataToSeason(id: string, data: any): Season {
       draw: data.pointsSystem?.draw ?? 0,
       loss: data.pointsSystem?.loss ?? 0,
     },
-    teams: data.teams ?? [],
     rounds: data.rounds ?? [],
   };
-} 
+}

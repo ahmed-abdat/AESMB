@@ -5,7 +5,14 @@ import { Team } from "@/types/team";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { IconCalendar, IconTarget, IconHandStop, IconArrowLeft } from "@tabler/icons-react";
+import {
+  IconCalendar,
+  IconTarget,
+  IconHandStop,
+  IconArrowLeft,
+  IconTargetOff,
+} from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -19,26 +26,81 @@ function TeamLogo({ src, alt }: { src: string; alt: string }) {
   return (
     <div className="relative w-16 h-16 md:w-24 md:h-24 mx-auto">
       <Image
-        src={src || '/logo.jpg'}
+        src={src || "/logo.jpg"}
         alt={alt}
         fill
         sizes="(max-width: 768px) 64px, 96px"
         className="object-contain"
         onError={(e) => {
-          (e.target as HTMLImageElement).src = '/logo.jpg';
+          (e.target as HTMLImageElement).src = "/logo.jpg";
         }}
       />
     </div>
   );
 }
 
-export function MatchDetailsSection({ match, teams }: MatchDetailsSectionProps) {
+export function MatchDetailsSection({
+  match,
+  teams,
+}: MatchDetailsSectionProps) {
   const router = useRouter();
-  const homeTeam = teams.find(team => team.id === match.homeTeamId);
-  const awayTeam = teams.find(team => team.id === match.awayTeamId);
+  const homeTeam = teams.find((team) => team.id === match.homeTeamId);
+  const awayTeam = teams.find((team) => team.id === match.awayTeamId);
 
   const homeGoals = match.result?.goals?.home || [];
   const awayGoals = match.result?.goals?.away || [];
+
+  const renderGoal = (
+    goal: any,
+    team: Team | undefined,
+    opposingTeam: Team | undefined
+  ) => {
+    if (goal.type === "own") {
+      return (
+        <li
+          key={goal.id}
+          className="flex flex-wrap items-center gap-2 text-sm sm:text-base"
+        >
+          <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-red-500/10">
+            <IconTargetOff className="w-4 h-4 flex-shrink-0 text-red-500" />
+            <span className="font-medium truncate text-red-600">
+              But contre son camp
+              <span className="text-red-500/80 text-sm ml-1">
+                ({opposingTeam?.name})
+              </span>
+            </span>
+          </div>
+        </li>
+      );
+    }
+
+    const scorer = team?.members.find((m) => m.id === goal.scorerId);
+    const assister = goal.assistId
+      ? team?.members.find((m) => m.id === goal.assistId)
+      : null;
+
+    return (
+      <li
+        key={goal.id}
+        className="flex flex-wrap items-center gap-2 text-sm sm:text-base"
+      >
+        <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-green-500/10">
+          <IconTarget className="w-4 h-4 flex-shrink-0 text-green-500" />
+          <span className="font-medium truncate text-green-600">
+            {scorer?.name}
+          </span>
+          {assister && (
+            <>
+              <IconHandStop className="w-4 h-4 flex-shrink-0 ml-2 text-green-500" />
+              <span className="text-green-500/80 truncate">
+                {assister.name}
+              </span>
+            </>
+          )}
+        </div>
+      </li>
+    );
+  };
 
   return (
     <div className="space-y-6 md:space-y-8 max-w-4xl mx-auto">
@@ -113,24 +175,7 @@ export function MatchDetailsSection({ match, teams }: MatchDetailsSectionProps) 
           <CardContent className="p-4 sm:p-6 pt-0">
             {homeGoals.length > 0 ? (
               <ul className="space-y-2">
-                {homeGoals.map((goal) => {
-                  const scorer = homeTeam?.members.find(m => m.id === goal.scorerId);
-                  const assister = goal.assistId ? 
-                    homeTeam?.members.find(m => m.id === goal.assistId) : null;
-                  
-                  return (
-                    <li key={goal.id} className="flex flex-wrap items-center gap-2 text-sm sm:text-base">
-                      <IconTarget className="w-4 h-4 flex-shrink-0" />
-                      <span className="font-medium truncate">{scorer?.name}</span>
-                      {assister && (
-                        <>
-                          <IconHandStop className="w-4 h-4 flex-shrink-0 ml-2" />
-                          <span className="text-muted-foreground truncate">{assister.name}</span>
-                        </>
-                      )}
-                    </li>
-                  );
-                })}
+                {homeGoals.map((goal) => renderGoal(goal, homeTeam, awayTeam))}
               </ul>
             ) : (
               <p className="text-sm text-muted-foreground">Aucun but</p>
@@ -149,24 +194,7 @@ export function MatchDetailsSection({ match, teams }: MatchDetailsSectionProps) 
           <CardContent className="p-4 sm:p-6 pt-0">
             {awayGoals.length > 0 ? (
               <ul className="space-y-2">
-                {awayGoals.map((goal) => {
-                  const scorer = awayTeam?.members.find(m => m.id === goal.scorerId);
-                  const assister = goal.assistId ? 
-                    awayTeam?.members.find(m => m.id === goal.assistId) : null;
-                  
-                  return (
-                    <li key={goal.id} className="flex flex-wrap items-center gap-2 text-sm sm:text-base">
-                      <IconTarget className="w-4 h-4 flex-shrink-0" />
-                      <span className="font-medium truncate">{scorer?.name}</span>
-                      {assister && (
-                        <>
-                          <IconHandStop className="w-4 h-4 flex-shrink-0 ml-2" />
-                          <span className="text-muted-foreground truncate">{assister.name}</span>
-                        </>
-                      )}
-                    </li>
-                  );
-                })}
+                {awayGoals.map((goal) => renderGoal(goal, awayTeam, homeTeam))}
               </ul>
             ) : (
               <p className="text-sm text-muted-foreground">Aucun but</p>
@@ -176,4 +204,4 @@ export function MatchDetailsSection({ match, teams }: MatchDetailsSectionProps) 
       </div>
     </div>
   );
-} 
+}

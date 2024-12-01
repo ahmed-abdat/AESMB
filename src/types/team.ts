@@ -6,6 +6,7 @@ export interface TeamMember {
   stats: {
     goals: number;
     assists: number;
+    ownGoals: number;
   };
   createdAt: string;
 }
@@ -53,11 +54,13 @@ export function convertFirestoreDataToTeam(id: string, data: any): Team {
     logo: data.logo,
     seasons: data.seasons || [],
     members: data.members || [],
-    createdAt: data.createdAt instanceof Timestamp 
-      ? data.createdAt.toDate().toISOString()
-      : data.createdAt,
-    updatedAt: data.updatedAt instanceof Timestamp 
-      ? data.updatedAt.toDate().toISOString()
-      : data.updatedAt,
+    createdAt:
+      data.createdAt instanceof Timestamp
+        ? data.createdAt.toDate().toISOString()
+        : data.createdAt,
+    updatedAt:
+      data.updatedAt instanceof Timestamp
+        ? data.updatedAt.toDate().toISOString()
+        : data.updatedAt,
   };
 }

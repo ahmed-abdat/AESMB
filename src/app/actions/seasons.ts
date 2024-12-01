@@ -33,7 +33,6 @@ export async function createSeason(data: SeasonFormData) {
           ? "completed" 
           : "ongoing",
       pointsSystem: DEFAULT_POINTS_SYSTEM,
-      teams: [],
       rounds: [],
     };
 

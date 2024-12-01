@@ -35,10 +35,12 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const goalSchema = z.object({
   id: z.string(),
-  scorerId: z.string().min(1, "Le buteur est requis"),
+  type: z.enum(["regular", "own"]).default("regular"),
+  scorerId: z.string().optional(),
   assistId: z.string().optional(),
 });
 
@@ -73,43 +75,57 @@ export function MatchResultDialog({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      homeGoals: match.result?.goals?.home.map(goal => ({
-        ...goal,
-        assistId: goal.assistId || "none",
-      })) || [],
-      awayGoals: match.result?.goals?.away.map(goal => ({
-        ...goal,
-        assistId: goal.assistId || "none",
-      })) || [],
+      homeGoals:
+        match.result?.goals?.home.map((goal) => ({
+          ...goal,
+          type: goal.type || "regular",
+          assistId: goal.assistId || "none",
+        })) || [],
+      awayGoals:
+        match.result?.goals?.away.map((goal) => ({
+          ...goal,
+          type: goal.type || "regular",
+          assistId: goal.assistId || "none",
+        })) || [],
     },
   });
 
   useEffect(() => {
     if (open) {
       form.reset({
-        homeGoals: match.result?.goals?.home.map(goal => ({
-          ...goal,
-          assistId: goal.assistId || "none",
-        })) || [],
-        awayGoals: match.result?.goals?.away.map(goal => ({
-          ...goal,
-          assistId: goal.assistId || "none",
-        })) || [],
+        homeGoals:
+          match.result?.goals?.home.map((goal) => ({
+            ...goal,
+            type: goal.type || "regular",
+            assistId: goal.assistId || "none",
+          })) || [],
+        awayGoals:
+          match.result?.goals?.away.map((goal) => ({
+            ...goal,
+            type: goal.type || "regular",
+            assistId: goal.assistId || "none",
+          })) || [],
       });
     }
   }, [open, match, form]);
 
-  const { fields: homeGoalFields, append: appendHomeGoal, remove: removeHomeGoal } = 
-    useFieldArray({
-      control: form.control,
-      name: "homeGoals",
-    });
-  
-  const { fields: awayGoalFields, append: appendAwayGoal, remove: removeAwayGoal } = 
-    useFieldArray({
-      control: form.control,
-      name: "awayGoals",
-    });
+  const {
+    fields: homeGoalFields,
+    append: appendHomeGoal,
+    remove: removeHomeGoal,
+  } = useFieldArray({
+    control: form.control,
+    name: "homeGoals",
+  });
+
+  const {
+    fields: awayGoalFields,
+    append: appendAwayGoal,
+    remove: removeAwayGoal,
+  } = useFieldArray({
+    control: form.control,
+    name: "awayGoals",
+  });
 
   const handleClose = () => {
     form.reset();
@@ -120,14 +136,30 @@ export function MatchResultDialog({
     setIsLoading(true);
     try {
       const processedValues = {
-        homeGoals: values.homeGoals.map(goal => ({
-          ...goal,
-          assistId: goal.assistId === "none" ? undefined : goal.assistId,
-        })),
-        awayGoals: values.awayGoals.map(goal => ({
-          ...goal,
-          assistId: goal.assistId === "none" ? undefined : goal.assistId,
-        })),
+        homeGoals: values.homeGoals.map((goal) => {
+          if (goal.type === "own") {
+            return {
+              id: goal.id,
+              type: "own" as const,
+            };
+          }
+          return {
+            ...goal,
+            assistId: goal.assistId === "none" ? undefined : goal.assistId,
+          };
+        }),
+        awayGoals: values.awayGoals.map((goal) => {
+          if (goal.type === "own") {
+            return {
+              id: goal.id,
+              type: "own" as const,
+            };
+          }
+          return {
+            ...goal,
+            assistId: goal.assistId === "none" ? undefined : goal.assistId,
+          };
+        }),
       };
 
       const result = await updateMatchResult(seasonId, roundId, match.id, {
@@ -144,7 +176,9 @@ export function MatchResultDialog({
         form.reset();
         onOpenChange(false);
       } else {
-        toast.error(result.error?.message || "Erreur lors de la mise à jour du résultat");
+        toast.error(
+          result.error?.message || "Erreur lors de la mise à jour du résultat"
+        );
       }
     } catch (error) {
       console.error("Error updating match result:", error);
@@ -154,14 +188,15 @@ export function MatchResultDialog({
     }
   };
 
-  const addGoal = (team: 'home' | 'away') => {
+  const addGoal = (team: "home" | "away") => {
     const newGoal = {
       id: crypto.randomUUID(),
-      scorerId: '',
+      type: "regular" as const,
+      scorerId: "",
       assistId: "none",
     };
 
-    if (team === 'home') {
+    if (team === "home") {
       appendHomeGoal(newGoal);
     } else {
       appendAwayGoal(newGoal);
@@ -177,11 +212,14 @@ export function MatchResultDialog({
             {homeTeam.name} vs {awayTeam.name}
           </DialogDescription>
         </DialogHeader>
-        
+
         <Separator />
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-x-scroll">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col flex-1 overflow-x-scroll"
+          >
             <div className="flex-1 min-h-0 px-6 py-4">
               <div className="grid grid-cols-2 gap-8 h-full">
                 {/* Home Team Goals */}
@@ -191,14 +229,15 @@ export function MatchResultDialog({
                       <div>
                         <h3 className="font-medium">{homeTeam.name}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {homeGoalFields.length} but{homeGoalFields.length > 1 ? 's' : ''}
+                          {homeGoalFields.length} but
+                          {homeGoalFields.length > 1 ? "s" : ""}
                         </p>
                       </div>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => addGoal('home')}
+                        onClick={() => addGoal("home")}
                         className="gap-2"
                       >
                         <IconPlus className="w-4 h-4" />
@@ -206,13 +245,15 @@ export function MatchResultDialog({
                       </Button>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4 overflow-y-auto flex-1 pr-2">
                     {homeGoalFields.map((field, index) => (
                       <Card key={field.id}>
                         <CardContent className="p-4 space-y-4">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">But {index + 1}</span>
+                            <span className="text-sm font-medium">
+                              But {index + 1}
+                            </span>
                             <Button
                               type="button"
                               variant="ghost"
@@ -230,7 +271,15 @@ export function MatchResultDialog({
                               <FormItem>
                                 <FormLabel>Buteur</FormLabel>
                                 <Select
-                                  onValueChange={field.onChange}
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    if (value === "own") {
+                                      form.setValue(`homeGoals.${index}.type`, 'own');
+                                      form.setValue(`homeGoals.${index}.assistId`, 'none');
+                                    } else {
+                                      form.setValue(`homeGoals.${index}.type`, 'regular');
+                                    }
+                                  }}
                                   defaultValue={field.value}
                                 >
                                   <FormControl>
@@ -239,6 +288,12 @@ export function MatchResultDialog({
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
+                                    <SelectItem 
+                                      value="own" 
+                                      className="text-red-600 font-medium border-b"
+                                    >
+                                      🥅 But contre son camp
+                                    </SelectItem>
                                     {homeTeam.members
                                       .sort((a, b) => a.name.localeCompare(b.name))
                                       .map((player) => (
@@ -253,36 +308,48 @@ export function MatchResultDialog({
                             )}
                           />
 
-                          <FormField
-                            control={form.control}
-                            name={`homeGoals.${index}.assistId`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Passeur (optionnel)</FormLabel>
-                                <Select
-                                  onValueChange={(value) => field.onChange(value)}
-                                  value={field.value || "none"}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Sélectionner le passeur" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="none">Aucun passeur</SelectItem>
-                                    {homeTeam.members
-                                      .sort((a, b) => a.name.localeCompare(b.name))
-                                      .map((player) => (
-                                        <SelectItem key={player.id} value={player.id}>
-                                          {player.name}
-                                        </SelectItem>
-                                      ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          {form.watch(`homeGoals.${index}.scorerId`) !==
+                            "own" && (
+                            <FormField
+                              control={form.control}
+                              name={`homeGoals.${index}.assistId`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Passeur (optionnel)</FormLabel>
+                                  <Select
+                                    onValueChange={(value) =>
+                                      field.onChange(value)
+                                    }
+                                    value={field.value || "none"}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Sélectionner le passeur" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="none">
+                                        Aucun passeur
+                                      </SelectItem>
+                                      {homeTeam.members
+                                        .sort((a, b) =>
+                                          a.name.localeCompare(b.name)
+                                        )
+                                        .map((player) => (
+                                          <SelectItem
+                                            key={player.id}
+                                            value={player.id}
+                                          >
+                                            {player.name}
+                                          </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
                         </CardContent>
                       </Card>
                     ))}
@@ -296,14 +363,15 @@ export function MatchResultDialog({
                       <div>
                         <h3 className="font-medium">{awayTeam.name}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {awayGoalFields.length} but{awayGoalFields.length > 1 ? 's' : ''}
+                          {awayGoalFields.length} but
+                          {awayGoalFields.length > 1 ? "s" : ""}
                         </p>
                       </div>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => addGoal('away')}
+                        onClick={() => addGoal("away")}
                         className="gap-2"
                       >
                         <IconPlus className="w-4 h-4" />
@@ -311,13 +379,15 @@ export function MatchResultDialog({
                       </Button>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4 overflow-y-auto flex-1 pr-2">
                     {awayGoalFields.map((field, index) => (
                       <Card key={field.id}>
                         <CardContent className="p-4 space-y-4">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">But {index + 1}</span>
+                            <span className="text-sm font-medium">
+                              But {index + 1}
+                            </span>
                             <Button
                               type="button"
                               variant="ghost"
@@ -335,7 +405,15 @@ export function MatchResultDialog({
                               <FormItem>
                                 <FormLabel>Buteur</FormLabel>
                                 <Select
-                                  onValueChange={field.onChange}
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    if (value === "own") {
+                                      form.setValue(`awayGoals.${index}.type`, 'own');
+                                      form.setValue(`awayGoals.${index}.assistId`, 'none');
+                                    } else {
+                                      form.setValue(`awayGoals.${index}.type`, 'regular');
+                                    }
+                                  }}
                                   defaultValue={field.value}
                                 >
                                   <FormControl>
@@ -344,6 +422,12 @@ export function MatchResultDialog({
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
+                                    <SelectItem 
+                                      value="own" 
+                                      className="text-red-600 font-medium border-b"
+                                    >
+                                      🥅 But contre son camp
+                                    </SelectItem>
                                     {awayTeam.members
                                       .sort((a, b) => a.name.localeCompare(b.name))
                                       .map((player) => (
@@ -358,36 +442,48 @@ export function MatchResultDialog({
                             )}
                           />
 
-                          <FormField
-                            control={form.control}
-                            name={`awayGoals.${index}.assistId`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Passeur (optionnel)</FormLabel>
-                                <Select
-                                  onValueChange={(value) => field.onChange(value)}
-                                  value={field.value || "none"}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Sélectionner le passeur" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="none">Aucun passeur</SelectItem>
-                                    {awayTeam.members
-                                      .sort((a, b) => a.name.localeCompare(b.name))
-                                      .map((player) => (
-                                        <SelectItem key={player.id} value={player.id}>
-                                          {player.name}
-                                        </SelectItem>
-                                      ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          {form.watch(`awayGoals.${index}.scorerId`) !==
+                            "own" && (
+                            <FormField
+                              control={form.control}
+                              name={`awayGoals.${index}.assistId`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Passeur (optionnel)</FormLabel>
+                                  <Select
+                                    onValueChange={(value) =>
+                                      field.onChange(value)
+                                    }
+                                    value={field.value || "none"}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Sélectionner le passeur" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="none">
+                                        Aucun passeur
+                                      </SelectItem>
+                                      {awayTeam.members
+                                        .sort((a, b) =>
+                                          a.name.localeCompare(b.name)
+                                        )
+                                        .map((player) => (
+                                          <SelectItem
+                                            key={player.id}
+                                            value={player.id}
+                                          >
+                                            {player.name}
+                                          </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
                         </CardContent>
                       </Card>
                     ))}
@@ -418,4 +514,4 @@ export function MatchResultDialog({
       </DialogContent>
     </Dialog>
   );
-} 
+}

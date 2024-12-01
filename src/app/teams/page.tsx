@@ -1,14 +1,17 @@
 import { getTeams } from "@/app/actions/teams";
+import { getCurrentSeason } from "@/app/actions/seasons";
 import { TeamsOverviewSection } from "@/components/sections/TeamsOverviewSection";
 import { IconUsers } from "@tabler/icons-react";
 import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
+import { calculateStandings } from "@/lib/standings";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
 
 export default async function TeamsPage() {
-  const { success, teams } = await getTeams();
+  const { success: teamsSuccess, teams } = await getTeams();
+  const { success: seasonSuccess, season: currentSeason } = await getCurrentSeason();
 
-  if (!success || !teams) {
+  if (!teamsSuccess || !seasonSuccess || !teams || !currentSeason) {
     return (
       <main className="min-h-screen pt-16">
         <div className="px-4 md:px-8">
@@ -17,6 +20,14 @@ export default async function TeamsPage() {
       </main>
     );
   }
+
+  // Calculate standings if we have a current season
+  const standings = currentSeason ? calculateStandings(currentSeason, teams) : [];
+
+  // Get participating teams
+  const participatingTeams = currentSeason 
+    ? teams.filter(team => team.seasons.includes(currentSeason.id))
+    : [];
 
   return (
     <main className="min-h-screen pt-16">
@@ -30,7 +41,12 @@ export default async function TeamsPage() {
       </div>
 
       <div className="py-4 md:py-8 px-4 md:px-8">
-        <TeamsOverviewSection teams={teams} />
+        <TeamsOverviewSection 
+          teams={teams} 
+          currentSeason={currentSeason}
+          standings={standings}
+          participatingTeams={participatingTeams}
+        />
       </div>
     </main>
   );
