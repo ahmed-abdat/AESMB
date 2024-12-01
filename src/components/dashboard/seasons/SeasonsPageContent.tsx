@@ -7,14 +7,14 @@ import { useState, useEffect } from "react";
 import { subscribeToSeasons } from "@/lib/firebase/subscriptions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  IconArrowLeft,
-  IconCalendar,
-  IconUsers,
+import { 
+  IconArrowLeft, 
+  IconCalendar, 
+  IconUsers, 
   IconPlus,
   IconEdit,
   IconTrash,
-  IconTrophy,
+  IconTrophy
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,10 +31,7 @@ interface SeasonsPageContentProps {
   teams: Team[];
 }
 
-export function SeasonsPageContent({
-  initialSeasons,
-  teams,
-}: SeasonsPageContentProps) {
+export function SeasonsPageContent({ initialSeasons, teams }: SeasonsPageContentProps) {
   const [seasons, setSeasons] = useState<Season[]>(initialSeasons);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -64,16 +61,15 @@ export function SeasonsPageContent({
 
   // Function to get participating teams count for a season
   const getParticipatingTeamsCount = (season: Season) => {
-    return teams.filter((team) =>
-      team.seasons?.some((seasonId) => seasonId === season.id)
+    return teams.filter(team => 
+      team.seasons?.some(seasonId => seasonId === season.id)
     ).length;
   };
 
   useEffect(() => {
     const unsubscribe = subscribeToSeasons((updatedSeasons) => {
       const sortedSeasons = [...updatedSeasons].sort(
-        (a, b) =>
-          new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+        (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
       );
       setSeasons(sortedSeasons);
     });
@@ -101,7 +97,10 @@ export function SeasonsPageContent({
             Gérez les saisons du championnat
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
+        <Button 
+          className="gap-2" 
+          onClick={() => setShowAddDialog(true)}
+        >
           <IconPlus className="w-4 h-4" />
           Nouvelle Saison
         </Button>
@@ -153,7 +152,10 @@ export function SeasonsPageContent({
       )}
 
       {/* Add Season Dialog */}
-      <AddSeasonDialog open={showAddDialog} onOpenChange={setShowAddDialog} />
+      <AddSeasonDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+      />
 
       {/* Edit Season Dialog */}
       {selectedSeason && (
@@ -185,8 +187,8 @@ function SeasonCard({ season, teams }: { season: Season; teams: Team[] }) {
     if (participatingTeamsCount > 0) {
       toast.error(
         `Impossible de supprimer cette saison car ${participatingTeamsCount} équipe${
-          participatingTeamsCount > 1 ? "s" : ""
-        } y participe${participatingTeamsCount > 1 ? "nt" : ""}`
+          participatingTeamsCount > 1 ? 's' : ''
+        } y participe${participatingTeamsCount > 1 ? 'nt' : ''}`
       );
       return;
     }
@@ -203,8 +205,8 @@ function SeasonCard({ season, teams }: { season: Season; teams: Team[] }) {
     if (participatingTeamsCount > 0) {
       toast.error(
         `Impossible de supprimer cette saison car ${participatingTeamsCount} équipe${
-          participatingTeamsCount > 1 ? "s" : ""
-        } y participe${participatingTeamsCount > 1 ? "nt" : ""}`
+          participatingTeamsCount > 1 ? 's' : ''
+        } y participe${participatingTeamsCount > 1 ? 'nt' : ''}`
       );
       setShowDeleteDialog(false);
       return;

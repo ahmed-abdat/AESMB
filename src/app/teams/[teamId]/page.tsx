@@ -6,8 +6,47 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { NEXT_REVALIDATE_TIME } from "@/constants/next_revalidat_time";
 import { Season } from "@/types/season";
+import { Metadata } from "next";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { teamId: string };
+}): Promise<Metadata> {
+  const { success, team } = await getTeam(params.teamId);
+
+  if (!success || !team) {
+    return {
+      title: "Équipe non trouvée | Match Champions",
+      description: "Cette équipe n'existe pas ou a été supprimée.",
+    };
+  }
+
+  return {
+    title: `${team.name} | Match Champions`,
+    description: `Découvrez les statistiques, les résultats et l'historique de ${team.name} dans le championnat. Suivez les performances de l'équipe match après match.`,
+    openGraph: {
+      title: `${team.name} | Match Champions`,
+      description: `Statistiques et résultats de ${team.name} dans le championnat`,
+      images: [
+        {
+          url: team.logo,
+          width: 300,
+          height: 300,
+          alt: `Logo de ${team.name}`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary",
+      title: `${team.name} | Match Champions`,
+      description: `Statistiques et résultats de ${team.name}`,
+      images: [{ url: team.logo, alt: `Logo de ${team.name}` }],
+    },
+  };
+}
 
 export default async function TeamPage({
   params,

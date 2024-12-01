@@ -1,32 +1,76 @@
 import { getTeams } from "@/app/actions/teams";
 import { getCurrentSeason } from "@/app/actions/seasons";
 import { TeamsOverviewSection } from "@/components/sections/TeamsOverviewSection";
-import { IconUsers } from "@tabler/icons-react";
-import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
+import { IconUsers, IconTrophy, IconCalendar } from "@tabler/icons-react";
+import { NEXT_REVALIDATE_TIME } from "@/constants/next_revalidat_time";
 import { calculateStandings } from "@/lib/standings";
+import { Metadata } from "next";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
 
+export async function generateMetadata(): Promise<Metadata> {
+  const { success: teamsSuccess, teams } = await getTeams();
+  const { success: seasonSuccess, season: currentSeason } =
+    await getCurrentSeason();
+
+  if (!teamsSuccess || !seasonSuccess || !teams || !currentSeason) {
+    return {
+      title: "Équipes | Match Champions",
+      description: "Découvrez toutes les équipes participant au championnat.",
+    };
+  }
+
+  // Get participating teams
+  const participatingTeams = teams.filter((team) =>
+    team.seasons.includes(currentSeason.id)
+  );
+  const teamNames = participatingTeams.map((team) => team.name).join(", ");
+
+  return {
+    title: "Équipes | Match Champions",
+    description: `Découvrez toutes les équipes participant au championnat ${currentSeason.name}. Équipes participantes : ${teamNames}. Consultez leurs statistiques, résultats et performances tout au long de la saison.`,
+    openGraph: {
+      title: "Équipes | Match Champions",
+      description: `Équipes participantes au championnat ${currentSeason.name} : ${teamNames}`,
+      type: "website",
+      locale: "fr_FR",
+    },
+    keywords: [
+      "football",
+      "équipes",
+      "championnat",
+      currentSeason.name,
+      ...participatingTeams.map((team) => team.name),
+    ],
+  };
+}
+
 export default async function TeamsPage() {
   const { success: teamsSuccess, teams } = await getTeams();
-  const { success: seasonSuccess, season: currentSeason } = await getCurrentSeason();
+  const { success: seasonSuccess, season: currentSeason } =
+    await getCurrentSeason();
 
   if (!teamsSuccess || !seasonSuccess || !teams || !currentSeason) {
     return (
       <main className="min-h-screen pt-16">
         <div className="px-4 md:px-8">
-          <h1 className="text-2xl md:text-3xl font-bold">Données non disponibles</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Données non disponibles
+          </h1>
         </div>
       </main>
     );
   }
 
   // Calculate standings if we have a current season
-  const standings = currentSeason ? calculateStandings(currentSeason, teams) : [];
+  const standings = currentSeason
+    ? calculateStandings(currentSeason, teams)
+    : [];
 
   // Get participating teams
-  const participatingTeams = currentSeason 
-    ? teams.filter(team => team.seasons.includes(currentSeason.id))
+  const participatingTeams = currentSeason
+    ? teams.filter((team) => team.seasons.includes(currentSeason.id))
     : [];
 
   return (
@@ -41,8 +85,8 @@ export default async function TeamsPage() {
       </div>
 
       <div className="py-4 md:py-8 px-4 md:px-8">
-        <TeamsOverviewSection 
-          teams={teams} 
+        <TeamsOverviewSection
+          teams={teams}
           currentSeason={currentSeason}
           standings={standings}
           participatingTeams={participatingTeams}

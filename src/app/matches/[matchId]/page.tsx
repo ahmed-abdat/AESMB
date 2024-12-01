@@ -3,13 +3,77 @@ import { getTeams } from "@/app/actions/teams";
 import { MatchDetailsSection } from "@/components/sections/MatchDetailsSection";
 import { IconBallFootball } from "@tabler/icons-react";
 import { notFound } from "next/navigation";
-import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
+import { NEXT_REVALIDATE_TIME } from "@/constants/next_revalidat_time";
+import { Metadata } from "next";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
 
 interface MatchPageProps {
   params: {
     matchId: string;
+  };
+}
+
+export async function generateMetadata({
+  params,
+}: MatchPageProps): Promise<Metadata> {
+  const { matchId } = params;
+  const { success: seasonSuccess, season } = await getCurrentSeason();
+  const { success: teamsSuccess, teams } = await getTeams();
+
+  if (!seasonSuccess || !season || !teamsSuccess || !teams) {
+    return {
+      title: "Match non trouvé | Match Champions",
+      description: "Les détails du match ne sont pas disponibles.",
+    };
+  }
+
+  // Find the match in the season
+  const match = season.rounds
+    .flatMap((round) =>
+      round.matches.map((match) => ({
+        ...match,
+        roundNumber: round.number,
+      }))
+    )
+    .find((match) => match.id === matchId);
+
+  if (!match) {
+    return {
+      title: "Match non trouvé | Match Champions",
+      description: "Les détails du match ne sont pas disponibles.",
+    };
+  }
+
+  const homeTeam = teams.find((t) => t.id === match.homeTeamId)?.name || "";
+  const awayTeam = teams.find((t) => t.id === match.awayTeamId)?.name || "";
+  const matchDate = format(new Date(match.date), "d MMMM yyyy", { locale: fr });
+  const matchScore =
+    match.status === "completed"
+      ? `${match.result?.homeScore}-${match.result?.awayScore}`
+      : "vs";
+
+  return {
+    title: `${homeTeam} ${matchScore} ${awayTeam} | Match Champions`,
+    description: `${homeTeam} contre ${awayTeam} - Journée ${match.roundNumber} du championnat ${season.name}. Match joué le ${matchDate}.`,
+    keywords: [
+      "match",
+      "football",
+      homeTeam,
+      awayTeam,
+      season.name,
+      `journée ${match.roundNumber}`,
+    ],
+    openGraph: {
+      title: `${homeTeam} ${matchScore} ${awayTeam} | Journée ${match.roundNumber}`,
+      description: `Match ${
+        match.status === "completed" ? "joué" : "prévu"
+      } le ${matchDate}`,
+      type: "website",
+      locale: "fr_FR",
+    },
   };
 }
 
@@ -23,12 +87,14 @@ export default async function MatchPage({ params }: MatchPageProps) {
   }
 
   // Find the match in the season
-  const match = season.rounds.flatMap(round => 
-    round.matches.map(match => ({
-      ...match,
-      roundNumber: round.number
-    }))
-  ).find(match => match.id === matchId);
+  const match = season.rounds
+    .flatMap((round) =>
+      round.matches.map((match) => ({
+        ...match,
+        roundNumber: round.number,
+      }))
+    )
+    .find((match) => match.id === matchId);
 
   if (!match) {
     return notFound();
@@ -53,4 +119,4 @@ export default async function MatchPage({ params }: MatchPageProps) {
       </div>
     </main>
   );
-} 
+}

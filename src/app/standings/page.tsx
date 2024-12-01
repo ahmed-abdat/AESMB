@@ -5,8 +5,46 @@ import { calculateStandings } from "@/lib/standings";
 import { IconTrophy } from "@tabler/icons-react";
 import { Suspense } from "react";
 import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
+import { Metadata } from "next";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { success: seasonSuccess, season } = await getCurrentSeason();
+  const { success: teamsSuccess, teams } = await getTeams();
+
+  if (!seasonSuccess || !season || !teamsSuccess || !teams) {
+    return {
+      title: "Classement | Match Champions",
+      description: "Consultez le classement du championnat de football.",
+    };
+  }
+
+  const standings = calculateStandings(season, teams);
+  const topThreeTeams = standings
+    .slice(0, 3)
+    .map((s) => teams.find((t) => t.id === s.stats.teamId)?.name)
+    .filter(Boolean)
+    .join(", ");
+
+  return {
+    title: `Classement ${season.name} | Match Champions`,
+    description: `Consultez le classement complet du championnat ${season.name}. Top 3 actuel : ${topThreeTeams}. Découvrez les statistiques de toutes les équipes.`,
+    keywords: [
+      "classement",
+      "championnat",
+      "football",
+      season.name,
+      ...teams.map((team) => team.name),
+    ],
+    openGraph: {
+      title: `Classement ${season.name} | Match Champions`,
+      description: `Classement actuel du championnat : ${topThreeTeams} en tête.`,
+      type: "website",
+      locale: "fr_FR",
+    },
+  };
+}
 
 export default async function StandingsPage() {
   const { success: seasonSuccess, season: fetchedSeason } = await getCurrentSeason();
@@ -16,7 +54,15 @@ export default async function StandingsPage() {
     return (
       <main className="min-h-screen pt-16">
         <div className="px-4 md:px-8">
-          <h1 className="text-2xl md:text-3xl font-bold">Aucune saison trouvée</h1>
+          <div className="max-w-2xl mx-auto text-center space-y-4">
+            <h1 className="text-2xl md:text-3xl font-bold">
+              Données non disponibles
+            </h1>
+            <p className="text-muted-foreground">
+              Les informations du classement ne sont pas disponibles pour le
+              moment. Veuillez réessayer plus tard.
+            </p>
+          </div>
         </div>
       </main>
     );
