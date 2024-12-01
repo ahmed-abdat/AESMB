@@ -1,18 +1,29 @@
 import { getAllSeasons } from "@/app/actions/seasons";
+import { getAllTeams } from "@/app/actions/teams";
 import { SeasonsPageContent } from "@/components/dashboard/seasons/SeasonsPageContent";
 
 export default async function SeasonsPage() {
-  const result = await getAllSeasons();
+  const [seasonsResult, teamsResult] = await Promise.all([
+    getAllSeasons(),
+    getAllTeams(),
+  ]);
 
-  if (!result.success) {
+  if (!seasonsResult.success || !teamsResult.success) {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground">
-          {result.error?.message || "Erreur lors du chargement des saisons"}
+          {seasonsResult.error?.message ||
+            teamsResult.error?.message ||
+            "Erreur lors du chargement des données"}
         </p>
       </div>
     );
   }
 
-  return <SeasonsPageContent initialSeasons={result.seasons} />;
-} 
+  return (
+    <SeasonsPageContent
+      initialSeasons={seasonsResult.seasons}
+      teams={teamsResult.teams}
+    />
+  );
+}

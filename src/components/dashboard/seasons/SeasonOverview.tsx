@@ -21,6 +21,20 @@ export function SeasonOverview({ season }: SeasonOverviewProps) {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const getSeasonStatus = () => {
+    const now = new Date();
+    const startDate = new Date(season.startDate);
+    const endDate = new Date(season.endDate);
+
+    if (now >= startDate && now <= endDate) {
+      return 'ongoing';
+    } else if (now < startDate) {
+      return 'upcoming';
+    } else {
+      return 'completed';
+    }
+  };
+
   const statusColors = {
     upcoming: "bg-blue-500/10 text-blue-500",
     ongoing: "bg-green-500/10 text-green-500",
@@ -47,6 +61,8 @@ export function SeasonOverview({ season }: SeasonOverviewProps) {
     fetchTeams();
   }, [season.id]);
 
+  const currentStatus = getSeasonStatus();
+
   return (
     <div className="space-y-8">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -55,8 +71,8 @@ export function SeasonOverview({ season }: SeasonOverviewProps) {
             <CardTitle className="text-sm font-medium">Statut</CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge variant="secondary" className={statusColors[season.status]}>
-              {statusLabels[season.status]}
+            <Badge variant="secondary" className={statusColors[currentStatus]}>
+              {statusLabels[currentStatus]}
             </Badge>
           </CardContent>
         </Card>
