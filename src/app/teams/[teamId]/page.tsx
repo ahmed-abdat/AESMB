@@ -32,12 +32,6 @@ export async function generateMetadata({
     season.status === "ongoing"
   );
 
-  // Create OpenGraph image URL
-  const ogImageUrl = new URL(`${process.env.NEXT_PUBLIC_APP_URL}/api/og`);
-  ogImageUrl.searchParams.set("title", team.name);
-  ogImageUrl.searchParams.set("subtitle", currentSeason ? `Saison ${currentSeason.name}` : "Fiche d'équipe");
-  ogImageUrl.searchParams.set("logos", encodeURIComponent(JSON.stringify([team.logo])));
-
   // Get team stats
   const totalGoals = team.members.reduce((sum: number, member: TeamMember) => 
     sum + (member.stats.goals || 0), 0
@@ -50,7 +44,6 @@ export async function generateMetadata({
     `Performance de l'équipe : ${totalGoals} buts marqués, ${totalAssists} passes décisives. ` +
     `Suivez les performances de l'équipe match après match.`;
 
-    
   return {
     title: `${team.name} | Match Champions`,
     description,
@@ -61,10 +54,10 @@ export async function generateMetadata({
       locale: "fr_FR",
       images: [
         {
-          url: ogImageUrl.toString(),
-          width: 1200,
-          height: 630,
-          alt: `${team.name} - Fiche d'équipe`,
+          url: team.logo,
+          width: 512,
+          height: 512,
+          alt: `Logo de ${team.name}`,
         },
       ],
     },
@@ -72,7 +65,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: `${team.name} | Match Champions`,
       description: `Statistiques et résultats de ${team.name}`,
-      images: [ogImageUrl.toString()],
+      images: [team.logo],
     },
     keywords: [
       "football",

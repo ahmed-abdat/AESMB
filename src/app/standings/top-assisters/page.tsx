@@ -32,8 +32,8 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   const topAssisters = calculateTopAssisters(season, teams);
-  const topThreeAssisters = topAssisters
-    .slice(0, 3)
+  const topFiveAssisters = topAssisters
+    .slice(0, 5)
     .map((assister) => {
       const team = teams.find((t) => t.id === assister.teamId);
       return {
@@ -43,25 +43,25 @@ export async function generateMetadata(): Promise<Metadata> {
       };
     });
 
-  const topThreeText = topThreeAssisters
+  const topFiveText = topFiveAssisters
     .map((assister) => `${assister.name} (${assister.assists} passes)`)
     .join(", ");
 
   // Get team logos for OpenGraph image
-  const teamLogos = topThreeAssisters
+  const teamLogos = topFiveAssisters
     .map((assister) => assister.team?.logo)
     .filter(Boolean);
 
   const ogImageUrl = new URL(`${process.env.NEXT_PUBLIC_APP_URL}/api/og`);
   ogImageUrl.searchParams.set('title', `Meilleurs Passeurs ${season.name}`);
-  ogImageUrl.searchParams.set('subtitle', topThreeText);
+  ogImageUrl.searchParams.set('subtitle', topFiveText);
   if (teamLogos.length > 0) {
     ogImageUrl.searchParams.set('logos', encodeURIComponent(JSON.stringify(teamLogos)));
   }
 
   return {
     title: `Meilleurs Passeurs ${season.name} | Match Champions`,
-    description: `Découvrez les meilleurs passeurs du championnat ${season.name}. Top 3 : ${topThreeText}.`,
+    description: `Découvrez les meilleurs passeurs du championnat ${season.name}. Top 5 : ${topFiveText}.`,
     keywords: [
       "passeurs",
       "statistiques",
@@ -71,7 +71,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     openGraph: {
       title: `Meilleurs Passeurs ${season.name} | Match Champions`,
-      description: `Top 3 des passeurs : ${topThreeText}`,
+      description: `Top 5 des passeurs : ${topFiveText}`,
       type: "website",
       locale: "fr_FR",
       images: [

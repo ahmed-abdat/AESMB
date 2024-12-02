@@ -1,1 +1,0 @@
-export const  mainRoute = 'https://services-mangment.vercel.app/'

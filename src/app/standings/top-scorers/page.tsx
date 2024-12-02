@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   const topScorers = calculateTopScorers(season, teams);
-  const topThreeScorers = topScorers.slice(0, 3).map((scorer) => {
+  const topFiveScorers = topScorers.slice(0, 5).map((scorer) => {
     const team = teams.find((t) => t.id === scorer.teamId);
     return {
       name: scorer.playerName,
@@ -37,18 +37,18 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   });
 
-  const topThreeText = topThreeScorers
+  const topFiveText = topFiveScorers
     .map((scorer) => `${scorer.name} (${scorer.goals} buts)`)
     .join(", ");
 
   // Get team logos for OpenGraph image
-  const teamLogos = topThreeScorers
+  const teamLogos = topFiveScorers
     .map((scorer) => scorer.team?.logo)
     .filter(Boolean);
 
   const ogImageUrl = new URL(`${process.env.NEXT_PUBLIC_APP_URL}/api/og`);
   ogImageUrl.searchParams.set("title", `Meilleurs Buteurs ${season.name}`);
-  ogImageUrl.searchParams.set("subtitle", topThreeText);
+  ogImageUrl.searchParams.set("subtitle", topFiveText);
   if (teamLogos.length > 0) {
     ogImageUrl.searchParams.set(
       "logos",
@@ -58,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: `Meilleurs Buteurs ${season.name} | Match Champions`,
-    description: `Découvrez les meilleurs buteurs du championnat ${season.name}. Top 3 : ${topThreeText}.`,
+    description: `Découvrez les meilleurs buteurs du championnat ${season.name}. Top 5 : ${topFiveText}.`,
     keywords: [
       "buteurs",
       "statistiques",
@@ -68,7 +68,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     openGraph: {
       title: `Meilleurs Buteurs ${season.name} | Match Champions`,
-      description: `Top 3 des buteurs : ${topThreeText}`,
+      description: `Top 5 des buteurs : ${topFiveText}`,
       type: "website",
       locale: "fr_FR",
       images: [

@@ -21,23 +21,23 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   const standings = calculateStandings(season, teams);
-  const topThreeTeams = standings
-    .slice(0, 3)
+  const topFiveTeams = standings
+    .slice(0, 5)
     .map((s) => teams.find((t) => t.id === s.stats.teamId))
     .filter(Boolean);
 
   // Get team names for display
-  const topThreeTeamNames = topThreeTeams
+  const topFiveTeamNames = topFiveTeams
     .map((team) => team?.name)
     .filter(Boolean)
     .join(", ");
 
   // Get team logos for OpenGraph image
-  const teamLogos = topThreeTeams.map((team) => team?.logo).filter(Boolean);
+  const teamLogos = topFiveTeams.map((team) => team?.logo).filter(Boolean);
 
   const ogImageUrl = new URL(`${process.env.NEXT_PUBLIC_APP_URL}/api/og`);
   ogImageUrl.searchParams.set("title", `Classement ${season.name}`);
-  ogImageUrl.searchParams.set("subtitle", topThreeTeamNames);
+  ogImageUrl.searchParams.set("subtitle", topFiveTeamNames);
   if (teamLogos.length > 0) {
     ogImageUrl.searchParams.set(
       "logos",
@@ -47,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: `Classement ${season.name} | Match Champions`,
-    description: `Consultez le classement complet du championnat ${season.name}. Top 3 actuel : ${topThreeTeamNames}. Découvrez les statistiques de toutes les équipes.`,
+    description: `Consultez le classement complet du championnat ${season.name}. Top 5 actuel : ${topFiveTeamNames}. Découvrez les statistiques de toutes les équipes.`,
     keywords: [
       "classement",
       "championnat",
@@ -57,7 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     openGraph: {
       title: `Classement ${season.name} | Match Champions`,
-      description: `Classement actuel du championnat : ${topThreeTeamNames} en tête.`,
+      description: `Classement actuel du championnat : ${topFiveTeamNames} en tête.`,
       type: "website",
       locale: "fr_FR",
       images: [
