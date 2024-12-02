@@ -5,11 +5,9 @@ import { Season } from "@/types/season";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import {
-  IconTrophy,
   IconTarget,
   IconHandStop,
   IconSoccerField,
-  IconChartBar,
   IconTargetOff,
 } from "@tabler/icons-react";
 import {

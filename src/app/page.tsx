@@ -6,8 +6,6 @@ import { getTeams } from "./actions/teams";
 import { calculateStandings } from "@/lib/standings";
 import { Standing } from "@/types/season";
 import { NEXT_REVALIDATE_TIME } from "@/constants/next_revalidat_time";
-import { Metadata } from "next";
-import { getOgImageUrl } from "@/lib/og-url";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
 

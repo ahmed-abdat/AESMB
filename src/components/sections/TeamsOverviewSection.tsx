@@ -3,7 +3,7 @@
 import { Team } from "@/types/team";
 import { Season, Standing } from "@/types/season";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { IconUsers, IconTrophy, IconBallFootball, IconTarget, IconMedal } from "@tabler/icons-react";
+import { IconUsers, IconTrophy, IconBallFootball, IconTarget } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
