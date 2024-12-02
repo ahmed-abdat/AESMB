@@ -50,6 +50,7 @@ export async function generateMetadata({
     `Performance de l'équipe : ${totalGoals} buts marqués, ${totalAssists} passes décisives. ` +
     `Suivez les performances de l'équipe match après match.`;
 
+    
   return {
     title: `${team.name} | Match Champions`,
     description,
