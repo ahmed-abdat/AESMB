@@ -49,6 +49,8 @@ export function PWAInstallPrompt() {
         console.log('User accepted the install prompt');
         // Clear session storage since the app is now installed
         sessionStorage.removeItem(STORAGE_KEY);
+        // Reset onboarding status to show it when app is launched
+        localStorage.removeItem('onboardingComplete');
       } else {
         console.log('User dismissed the install prompt');
         handleDismiss();
