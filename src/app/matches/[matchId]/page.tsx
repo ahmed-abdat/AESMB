@@ -47,32 +47,69 @@ export async function generateMetadata({
     };
   }
 
-  const homeTeam = teams.find((t) => t.id === match.homeTeamId)?.name || "";
-  const awayTeam = teams.find((t) => t.id === match.awayTeamId)?.name || "";
+  const homeTeam = teams.find((t) => t.id === match.homeTeamId);
+  const awayTeam = teams.find((t) => t.id === match.awayTeamId);
   const matchDate = format(new Date(match.date), "d MMMM yyyy", { locale: fr });
   const matchScore =
     match.status === "completed"
       ? `${match.result?.homeScore}-${match.result?.awayScore}`
       : "vs";
 
+  // Prepare team logos for OpenGraph image
+  const teamLogos = [];
+  if (homeTeam?.logo) teamLogos.push(homeTeam.logo);
+  if (awayTeam?.logo) teamLogos.push(awayTeam.logo);
+
+  const ogImageUrl = new URL(`${process.env.NEXT_PUBLIC_APP_URL}/api/og`);
+  ogImageUrl.searchParams.set(
+    "title",
+    `${homeTeam?.name || ""} ${matchScore} ${awayTeam?.name || ""}`
+  );
+  ogImageUrl.searchParams.set(
+    "subtitle",
+    `Journée ${match.roundNumber} - ${matchDate}`
+  );
+  if (teamLogos.length > 0) {
+    ogImageUrl.searchParams.set(
+      "logos",
+      encodeURIComponent(JSON.stringify(teamLogos))
+    );
+  }
+
   return {
-    title: `${homeTeam} ${matchScore} ${awayTeam} | Match Champions`,
-    description: `${homeTeam} contre ${awayTeam} - Journée ${match.roundNumber} du championnat ${season.name}. Match joué le ${matchDate}.`,
+    title: `${homeTeam?.name || ""} ${matchScore} ${
+      awayTeam?.name || ""
+    } | Match Champions`,
+    description: `${homeTeam?.name || ""} contre ${
+      awayTeam?.name || ""
+    } - Journée ${match.roundNumber} du championnat ${
+      season.name
+    }. Match joué le ${matchDate}.`,
     keywords: [
       "match",
       "football",
-      homeTeam,
-      awayTeam,
+      homeTeam?.name || "",
+      awayTeam?.name || "",
       season.name,
       `journée ${match.roundNumber}`,
     ],
     openGraph: {
-      title: `${homeTeam} ${matchScore} ${awayTeam} | Journée ${match.roundNumber}`,
+      title: `${homeTeam?.name || ""} ${matchScore} ${
+        awayTeam?.name || ""
+      } | Journée ${match.roundNumber}`,
       description: `Match ${
         match.status === "completed" ? "joué" : "prévu"
       } le ${matchDate}`,
       type: "website",
       locale: "fr_FR",
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: `${homeTeam?.name || ""} vs ${awayTeam?.name || ""}`,
+        },
+      ],
     },
   };
 }

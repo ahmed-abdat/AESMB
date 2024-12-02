@@ -10,45 +10,60 @@ import { Metadata } from "next";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
 
-export const metadata: Metadata = {
-  title: "Match Champions | Championnat de Football",
-  description:
-    "Suivez en direct les matchs, les classements et les statistiques du championnat. Restez informé des derniers résultats et des prochains matchs.",
-  keywords: [
-    "football",
-    "championnat",
-    "matchs",
-    "classement",
-    "équipes",
-    "statistiques",
-  ],
-  authors: [{ name: "Match Champions" }],
-  openGraph: {
-    title: "Match Champions | Championnat de Football",
+export async function generateMetadata(): Promise<Metadata> {
+  const { success: seasonSuccess, season } = await getCurrentSeason();
+  const { success: teamsSuccess, teams } = await getTeams();
+
+  const ogImageUrl = new URL(`${process.env.NEXT_PUBLIC_APP_URL}/api/og`);
+  ogImageUrl.searchParams.set("title", "Match Champions");
+  ogImageUrl.searchParams.set("subtitle", "Championnat de Football Amateur");
+
+  if (seasonSuccess && season && teamsSuccess && teams) {
+    const standings = calculateStandings(season, teams);
+    const topThreeTeams = standings
+      .slice(0, 3)
+      .map((s) => teams.find((t) => t.id === s.stats.teamId))
+      .filter(Boolean);
+
+    const teamLogos = topThreeTeams.map((team) => team?.logo).filter(Boolean);
+
+    if (teamLogos.length > 0) {
+      ogImageUrl.searchParams.set(
+        "logos",
+        encodeURIComponent(JSON.stringify(teamLogos))
+      );
+    }
+  }
+
+  return {
+    title: "Match Champions | Championnat de Football Amateur",
     description:
-      "Suivez en direct les matchs, les classements et les statistiques du championnat.",
-    type: "website",
-    locale: "fr_FR",
-    siteName: "Match Champions",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Match Champions | Championnat de Football",
-    description:
-      "Suivez en direct les matchs, les classements et les statistiques du championnat.",
-  },
-  alternates: {
-    canonical: "/",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
+      "Suivez en direct les résultats, le classement et les statistiques du championnat de football amateur Match Champions.",
+    keywords: [
+      "football",
+      "championnat",
+      "amateur",
+      "résultats",
+      "classement",
+      "statistiques",
+    ],
+    openGraph: {
+      title: "Match Champions | Championnat de Football Amateur",
+      description:
+        "Suivez en direct les résultats, le classement et les statistiques du championnat de football amateur Match Champions.",
+      type: "website",
+      locale: "fr_FR",
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: "Match Champions - Championnat de Football Amateur",
+        },
+      ],
     },
-  },
-};
+  };
+}
 
 export default async function Home() {
   const { success: seasonSuccess, season: fetchedSeason } =

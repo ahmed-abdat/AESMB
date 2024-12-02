@@ -4,7 +4,7 @@ import { StandingsSection } from "@/components/sections/StandingsSection";
 import { calculateStandings } from "@/lib/standings";
 import { IconTrophy } from "@tabler/icons-react";
 import { Suspense } from "react";
-import { NEXT_REVALIDATE_TIME } from '@/constants/next_revalidat_time';
+import { NEXT_REVALIDATE_TIME } from "@/constants/next_revalidat_time";
 import { Metadata } from "next";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
@@ -23,13 +23,31 @@ export async function generateMetadata(): Promise<Metadata> {
   const standings = calculateStandings(season, teams);
   const topThreeTeams = standings
     .slice(0, 3)
-    .map((s) => teams.find((t) => t.id === s.stats.teamId)?.name)
+    .map((s) => teams.find((t) => t.id === s.stats.teamId))
+    .filter(Boolean);
+
+  // Get team names for display
+  const topThreeTeamNames = topThreeTeams
+    .map((team) => team?.name)
     .filter(Boolean)
     .join(", ");
 
+  // Get team logos for OpenGraph image
+  const teamLogos = topThreeTeams.map((team) => team?.logo).filter(Boolean);
+
+  const ogImageUrl = new URL(`${process.env.NEXT_PUBLIC_APP_URL}/api/og`);
+  ogImageUrl.searchParams.set("title", `Classement ${season.name}`);
+  ogImageUrl.searchParams.set("subtitle", topThreeTeamNames);
+  if (teamLogos.length > 0) {
+    ogImageUrl.searchParams.set(
+      "logos",
+      encodeURIComponent(JSON.stringify(teamLogos))
+    );
+  }
+
   return {
     title: `Classement ${season.name} | Match Champions`,
-    description: `Consultez le classement complet du championnat ${season.name}. Top 3 actuel : ${topThreeTeams}. Découvrez les statistiques de toutes les équipes.`,
+    description: `Consultez le classement complet du championnat ${season.name}. Top 3 actuel : ${topThreeTeamNames}. Découvrez les statistiques de toutes les équipes.`,
     keywords: [
       "classement",
       "championnat",
@@ -39,15 +57,24 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     openGraph: {
       title: `Classement ${season.name} | Match Champions`,
-      description: `Classement actuel du championnat : ${topThreeTeams} en tête.`,
+      description: `Classement actuel du championnat : ${topThreeTeamNames} en tête.`,
       type: "website",
       locale: "fr_FR",
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: `Classement ${season.name}`,
+        },
+      ],
     },
   };
 }
 
 export default async function StandingsPage() {
-  const { success: seasonSuccess, season: fetchedSeason } = await getCurrentSeason();
+  const { success: seasonSuccess, season: fetchedSeason } =
+    await getCurrentSeason();
   const { success: teamsSuccess, teams } = await getTeams();
 
   if (!seasonSuccess || !fetchedSeason || !teamsSuccess || !teams) {
@@ -90,7 +117,7 @@ export default async function StandingsPage() {
             <div className="text-center py-8">Chargement du classement...</div>
           }
         >
-          <StandingsSection 
+          <StandingsSection
             season={fetchedSeason}
             standings={standings}
             teams={teams}

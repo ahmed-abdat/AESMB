@@ -27,6 +27,16 @@ export async function generateMetadata(): Promise<Metadata> {
   );
   const teamNames = participatingTeams.map((team) => team.name).join(", ");
 
+  // Create OpenGraph image URL with team logos
+  const ogImageUrl = new URL(`${process.env.NEXT_PUBLIC_APP_URL}/api/og`);
+  ogImageUrl.searchParams.set("title", "Équipes du Championnat");
+  ogImageUrl.searchParams.set("subtitle", currentSeason.name);
+  
+  const teamLogos = participatingTeams.map(team => team.logo).filter(Boolean);
+  if (teamLogos.length > 0) {
+    ogImageUrl.searchParams.set("logos", encodeURIComponent(JSON.stringify(teamLogos)));
+  }
+
   return {
     title: "Équipes | Match Champions",
     description: `Découvrez toutes les équipes participant au championnat ${currentSeason.name}. Équipes participantes : ${teamNames}. Consultez leurs statistiques, résultats et performances tout au long de la saison.`,
@@ -35,6 +45,20 @@ export async function generateMetadata(): Promise<Metadata> {
       description: `Équipes participantes au championnat ${currentSeason.name} : ${teamNames}`,
       type: "website",
       locale: "fr_FR",
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: "Équipes du championnat",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Équipes | Match Champions",
+      description: `Équipes du championnat ${currentSeason.name}`,
+      images: [ogImageUrl.toString()],
     },
     keywords: [
       "football",

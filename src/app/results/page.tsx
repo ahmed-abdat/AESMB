@@ -48,6 +48,13 @@ export async function generateMetadata(): Promise<Metadata> {
       description: `Derniers résultats : ${latestResults}`,
       type: "website",
       locale: "fr_FR",
+      images: [
+        {
+          url: `/logo.png`,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
   };
 }

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { NEXT_REVALIDATE_TIME } from "@/constants/next_revalidat_time";
 import { Season } from "@/types/season";
 import { Metadata } from "next";
+import { TeamMember } from "@/types/team";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
 
@@ -16,6 +17,7 @@ export async function generateMetadata({
   params: { teamId: string };
 }): Promise<Metadata> {
   const { success, team } = await getTeam(params.teamId);
+  const { seasons } = await getAllSeasons();
 
   if (!success || !team) {
     return {
@@ -24,27 +26,63 @@ export async function generateMetadata({
     };
   }
 
+  // Get the team's current season
+  const currentSeason = seasons.find(season => 
+    team.seasons.includes(season.id) && 
+    season.status === "ongoing"
+  );
+
+  // Create OpenGraph image URL
+  const ogImageUrl = new URL(`${process.env.NEXT_PUBLIC_APP_URL}/api/og`);
+  ogImageUrl.searchParams.set("title", team.name);
+  ogImageUrl.searchParams.set("subtitle", currentSeason ? `Saison ${currentSeason.name}` : "Fiche d'équipe");
+  ogImageUrl.searchParams.set("logos", encodeURIComponent(JSON.stringify([team.logo])));
+
+  // Get team stats
+  const totalGoals = team.members.reduce((sum: number, member: TeamMember) => 
+    sum + (member.stats.goals || 0), 0
+  );
+  const totalAssists = team.members.reduce((sum: number, member: TeamMember) => 
+    sum + (member.stats.assists || 0), 0
+  );
+
+  const description = `${team.name} - ${team.members.length} joueurs inscrits. ` +
+    `Performance de l'équipe : ${totalGoals} buts marqués, ${totalAssists} passes décisives. ` +
+    `Suivez les performances de l'équipe match après match.`;
+
   return {
     title: `${team.name} | Match Champions`,
-    description: `Découvrez les statistiques, les résultats et l'historique de ${team.name} dans le championnat. Suivez les performances de l'équipe match après match.`,
+    description,
     openGraph: {
       title: `${team.name} | Match Champions`,
-      description: `Statistiques et résultats de ${team.name} dans le championnat`,
+      description: `Statistiques et résultats de ${team.name}`,
+      type: "website",
+      locale: "fr_FR",
       images: [
         {
-          url: team.logo,
-          width: 300,
-          height: 300,
-          alt: `Logo de ${team.name}`,
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: `${team.name} - Fiche d'équipe`,
         },
       ],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: `${team.name} | Match Champions`,
       description: `Statistiques et résultats de ${team.name}`,
-      images: [{ url: team.logo, alt: `Logo de ${team.name}` }],
+      images: [ogImageUrl.toString()],
     },
+    keywords: [
+      "football",
+      "équipe",
+      team.name,
+      "statistiques",
+      "joueurs",
+      "résultats",
+      currentSeason?.name,
+      ...team.members.map((member: TeamMember) => member.name),
+    ].filter(Boolean),
   };
 }
 
