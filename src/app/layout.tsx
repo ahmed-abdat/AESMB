@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { Header } from "@/components/Header";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://aesmb.vercel.app/'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: 'Ligue AESMB - Championnat de Football',
   description: 'Suivez le championnat de football AESMB. Classements en direct, gestion des équipes et calendrier des matchs.',
   keywords: 'AESMB, football, championnat, tournoi, classement, matchs',
@@ -36,13 +36,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="fr">
-      <body className={`${roboto.className} ${tajawal.className} min-h-screen`}>
-        <Header />  
+    <html lang="fr" suppressHydrationWarning>
+      <body className={`${tajawal.variable} ${roboto.variable} font-sans`}>
+        <Header />
         {children}
         <Toaster 
           position="top-center" 

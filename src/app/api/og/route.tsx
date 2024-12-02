@@ -1,26 +1,22 @@
-import { ImageResponse } from "@vercel/og";
+import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
-import { Inter } from "next/font/google";
 
 export const runtime = "edge";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["600", "700"],
-});
-
-const LOGO_URL =
-  "https://firebasestorage.googleapis.com/v0/b/marketplace-37e56.appspot.com/o/logo.jpg?alt=media&token=40434c2f-2d64-49d3-b808-299eef508ea7";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const title = searchParams.get("title") || "Match Champions";
-    const subtitle = searchParams.get("subtitle") || "";
+    const subtitle = searchParams.get("subtitle");
     const logosParam = searchParams.get("logos");
     const logos = logosParam ? JSON.parse(decodeURIComponent(logosParam)) : [];
-    const type = searchParams.get("type") || "default"; // Can be 'default', 'match', 'standings', etc.
+
+    // Load the font
+    const tajawalData = await fetch(
+      new URL(
+        "https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l4qkLrY.woff2"
+      )
+    ).then((res) => res.arrayBuffer());
 
     return new ImageResponse(
       (
@@ -32,35 +28,25 @@ export async function GET(req: NextRequest) {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
+            backgroundColor: "white",
             position: "relative",
-            fontFamily: inter.style.fontFamily,
-            overflow: "hidden",
           }}
         >
-          {/* Decorative Elements */}
+          {/* Background Pattern */}
           <div
             style={{
               position: "absolute",
-              top: "0",
-              left: "0",
-              right: "0",
-              height: "8px",
-              background: "linear-gradient(90deg, #3B82F6 0%, #2563EB 100%)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: "0",
-              backgroundImage:
-                "radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.1) 2%, transparent 0%)",
-              backgroundSize: "50px 50px",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "#f8f9fa",
               opacity: 0.5,
+              zIndex: 0,
             }}
           />
 
-          {/* Content Container */}
+          {/* Content */}
           <div
             style={{
               display: "flex",
@@ -68,155 +54,87 @@ export async function GET(req: NextRequest) {
               alignItems: "center",
               justifyContent: "center",
               textAlign: "center",
-              padding: "60px",
-              position: "relative",
-              zIndex: 10,
-              width: "100%",
-              height: "100%",
+              zIndex: 1,
+              padding: "40px",
             }}
           >
-            {/* Logo */}
-            <div
+            {/* Title */}
+            <h1
               style={{
-                position: "absolute",
-                top: "40px",
-                left: "40px",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
+                fontSize: 60,
+                fontFamily: "Tajawal",
+                fontWeight: 700,
+                color: "#1a1a1a",
+                margin: 0,
+                lineHeight: 1.2,
+                marginBottom: subtitle ? "20px" : "0",
               }}
             >
-              <img
-                src={LOGO_URL}
-                alt="Match Champions Logo"
-                width={48}
-                height={48}
+              {title}
+            </h1>
+
+            {/* Subtitle */}
+            {subtitle && (
+              <h2
                 style={{
-                  borderRadius: "12px",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 20,
-                  fontWeight: 600,
-                  color: "#fff",
-                  opacity: 0.9,
+                  fontSize: 32,
+                  fontFamily: "Tajawal",
+                  fontWeight: 500,
+                  color: "#666666",
+                  margin: 0,
+                  marginBottom: "40px",
                 }}
               >
-                Match Champions
-              </span>
-            </div>
+                {subtitle}
+              </h2>
+            )}
 
-            {/* Main Content */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "24px",
-                maxWidth: "80%",
-              }}
-            >
-              {/* Title */}
+            {/* Team Logos */}
+            {logos.length > 0 && (
               <div
                 style={{
-                  fontSize: 64,
-                  fontWeight: 700,
-                  background: "linear-gradient(135deg, #fff 0%, #E2E8F0 100%)",
-                  backgroundClip: "text",
-                  color: "transparent",
-                  lineHeight: 1.2,
-                  textAlign: "center",
-                  marginBottom: subtitle ? "0" : "24px",
+                  display: "flex",
+                  gap: "40px",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: "20px",
                 }}
               >
-                {title}
+                {logos.map((logo: string, index: number) => (
+                  <img
+                    key={index}
+                    src={logo}
+                    alt={`Team ${index + 1}`}
+                    width={120}
+                    height={120}
+                    style={{
+                      objectFit: "contain",
+                    }}
+                  />
+                ))}
               </div>
-
-              {/* Subtitle */}
-              {subtitle && (
-                <div
-                  style={{
-                    fontSize: 32,
-                    fontWeight: 600,
-                    color: "#94A3B8",
-                    marginBottom: "24px",
-                  }}
-                >
-                  {subtitle}
-                </div>
-              )}
-
-              {/* Team Logos */}
-              {logos.length > 0 && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "40px",
-                    background: "rgba(255, 255, 255, 0.05)",
-                    padding: "24px 48px",
-                    borderRadius: "16px",
-                    backdropFilter: "blur(10px)",
-                  }}
-                >
-                  {logos.map((logo: string, index: number) => (
-                    <div
-                      key={index}
-                      style={{
-                        background: "white",
-                        padding: "12px",
-                        borderRadius: "12px",
-                        boxShadow:
-                          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                      }}
-                    >
-                      <img
-                        src={logo}
-                        alt="Team Logo"
-                        width={80}
-                        height={80}
-                        style={{
-                          objectFit: "contain",
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: "40px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "100%",
-                color: "#94A3B8",
-                fontSize: "16px",
-                fontWeight: 500,
-              }}
-            >
-              aesmb.vercel.app
-            </div>
+            )}
           </div>
         </div>
       ),
       {
         width: 1200,
         height: 630,
+        fonts: [
+          {
+            name: "Tajawal",
+            data: tajawalData,
+            style: "normal",
+          },
+        ],
+        headers: {
+          "Cache-Control": "public, max-age=31536000, immutable",
+          "Content-Type": "image/png",
+        },
       }
     );
-  } catch (e: unknown) {
-    const error = e as Error;
-    console.log(error.message);
-    return new Response(`Failed to generate the image`, {
-      status: 500,
-    });
+  } catch (error) {
+    console.error("Error generating OG image:", error);
+    return new Response("Failed to generate OG image", { status: 500 });
   }
 }
