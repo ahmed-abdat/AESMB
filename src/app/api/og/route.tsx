@@ -11,13 +11,6 @@ export async function GET(req: NextRequest) {
     const logosParam = searchParams.get("logos");
     const logos = logosParam ? JSON.parse(decodeURIComponent(logosParam)) : [];
 
-    // Load the font
-    const tajawalData = await fetch(
-      new URL(
-        "https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l4qkLrY.woff2"
-      )
-    ).then((res) => res.arrayBuffer());
-
     return new ImageResponse(
       (
         <div
@@ -62,7 +55,7 @@ export async function GET(req: NextRequest) {
             <h1
               style={{
                 fontSize: 60,
-                fontFamily: "Tajawal",
+                fontFamily: "system-ui",
                 fontWeight: 700,
                 color: "#1a1a1a",
                 margin: 0,
@@ -78,7 +71,7 @@ export async function GET(req: NextRequest) {
               <h2
                 style={{
                   fontSize: 32,
-                  fontFamily: "Tajawal",
+                  fontFamily: "system-ui",
                   fontWeight: 500,
                   color: "#666666",
                   margin: 0,
@@ -120,21 +113,19 @@ export async function GET(req: NextRequest) {
       {
         width: 1200,
         height: 630,
-        fonts: [
-          {
-            name: "Tajawal",
-            data: tajawalData,
-            style: "normal",
-          },
-        ],
         headers: {
           "Cache-Control": "public, max-age=31536000, immutable",
           "Content-Type": "image/png",
         },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating OG image:", error);
-    return new Response("Failed to generate OG image", { status: 500 });
+    return new Response(`Failed to generate OG image: ${error.message}`, { 
+      status: 500,
+      headers: {
+        "Content-Type": "text/plain",
+      }
+    });
   }
 }
