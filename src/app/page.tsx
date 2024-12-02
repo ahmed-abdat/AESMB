@@ -7,6 +7,7 @@ import { calculateStandings } from "@/lib/standings";
 import { Standing } from "@/types/season";
 import { NEXT_REVALIDATE_TIME } from "@/constants/next_revalidat_time";
 import { Metadata } from "next";
+import { getOgImageUrl } from "@/lib/og-url";
 
 export const revalidate = NEXT_REVALIDATE_TIME;
 
@@ -14,10 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const { success: seasonSuccess, season } = await getCurrentSeason();
   const { success: teamsSuccess, teams } = await getTeams();
 
-  const ogImageUrl = new URL(`${process.env.NEXT_PUBLIC_APP_URL}/api/og`);
-  ogImageUrl.searchParams.set("title", "Match Champions");
-  ogImageUrl.searchParams.set("subtitle", "Championnat de Football Amateur");
-
+  let teamLogos: string[] = [];
   if (seasonSuccess && season && teamsSuccess && teams) {
     const standings = calculateStandings(season, teams);
     const topThreeTeams = standings
@@ -25,15 +23,14 @@ export async function generateMetadata(): Promise<Metadata> {
       .map((s) => teams.find((t) => t.id === s.stats.teamId))
       .filter(Boolean);
 
-    const teamLogos = topThreeTeams.map((team) => team?.logo).filter(Boolean);
-
-    if (teamLogos.length > 0) {
-      ogImageUrl.searchParams.set(
-        "logos",
-        encodeURIComponent(JSON.stringify(teamLogos))
-      );
-    }
+    teamLogos = topThreeTeams.map((team) => team?.logo || "").filter(Boolean);
   }
+
+  const ogImageUrl = getOgImageUrl(
+    "Match Champions",
+    "Championnat de Football Amateur",
+    teamLogos
+  );
 
   return {
     title: "Match Champions | Championnat de Football Amateur",
@@ -55,7 +52,7 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "fr_FR",
       images: [
         {
-          url: ogImageUrl.toString(),
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: "Match Champions - Championnat de Football Amateur",
