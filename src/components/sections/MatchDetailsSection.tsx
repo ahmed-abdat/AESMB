@@ -3,7 +3,7 @@
 import { Match } from "@/types/season";
 import { Team } from "@/types/team";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from "date-fns";
+import { format, isFuture } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
   IconCalendar,
@@ -11,6 +11,7 @@ import {
   IconHandStop,
   IconArrowLeft,
   IconTargetOff,
+  IconClock,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -39,6 +40,31 @@ function TeamLogo({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+function getMatchStatus(match: Match) {
+  const matchDate = new Date(match.date);
+  
+  switch (match.status) {
+    case "completed":
+      return {
+        text: "Terminé",
+        icon: null,
+        className: "text-muted-foreground"
+      };
+    case "scheduled":
+      return {
+        text: isFuture(matchDate) ? "À venir" : "En attente",
+        icon: <IconClock className="w-4 h-4" />,
+        className: isFuture(matchDate) ? "text-blue-500" : "text-yellow-500"
+      };
+    default:
+      return {
+        text: "En attente",
+        icon: <IconClock className="w-4 h-4" />,
+        className: "text-yellow-500"
+      };
+  }
+}
+
 export function MatchDetailsSection({
   match,
   teams,
@@ -49,6 +75,7 @@ export function MatchDetailsSection({
 
   const homeGoals = match.result?.goals?.home || [];
   const awayGoals = match.result?.goals?.away || [];
+  const matchStatus = getMatchStatus(match);
 
   const renderGoal = (
     goal: any,
@@ -141,11 +168,14 @@ export function MatchDetailsSection({
 
               <div className="text-center">
                 <div className="text-2xl sm:text-4xl font-bold">
-                  {match.result?.homeScore} - {match.result?.awayScore}
+                  {match.status === "completed" ? `${match.result?.homeScore} - ${match.result?.awayScore}` : "-"}
                 </div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-                  Terminé
-                </p>
+                <div className={cn("flex items-center justify-center gap-1 mt-2", matchStatus.className)}>
+                  {matchStatus.icon}
+                  <p className="text-xs sm:text-sm">
+                    {matchStatus.text}
+                  </p>
+                </div>
               </div>
 
               <div className="text-center space-y-2 sm:space-y-4">
@@ -163,45 +193,47 @@ export function MatchDetailsSection({
       </Card>
 
       {/* Goals Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Home Team Goals */}
-        <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <IconTarget className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="truncate">Buts {homeTeam?.name}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0">
-            {homeGoals.length > 0 ? (
-              <ul className="space-y-2">
-                {homeGoals.map((goal) => renderGoal(goal, homeTeam, awayTeam))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">Aucun but</p>
-            )}
-          </CardContent>
-        </Card>
+      {match.status === "completed" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Home Team Goals */}
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <IconTarget className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="truncate">Buts {homeTeam?.name}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              {homeGoals.length > 0 ? (
+                <ul className="space-y-2">
+                  {homeGoals.map((goal) => renderGoal(goal, homeTeam, awayTeam))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Aucun but</p>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Away Team Goals */}
-        <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <IconTarget className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="truncate">Buts {awayTeam?.name}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0">
-            {awayGoals.length > 0 ? (
-              <ul className="space-y-2">
-                {awayGoals.map((goal) => renderGoal(goal, awayTeam, homeTeam))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">Aucun but</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          {/* Away Team Goals */}
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <IconTarget className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="truncate">Buts {awayTeam?.name}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              {awayGoals.length > 0 ? (
+                <ul className="space-y-2">
+                  {awayGoals.map((goal) => renderGoal(goal, awayTeam, homeTeam))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Aucun but</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
