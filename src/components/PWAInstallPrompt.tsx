@@ -4,12 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { IconDeviceMobile, IconX } from '@tabler/icons-react';
 
-const STORAGE_KEYS = {
-  INSTALL_PROMPT_DISMISSED: 'pwa-install-prompt-dismissed',
-  LAST_PROMPT_TIME: 'pwa-last-prompt-time',
-};
-
-const PROMPT_DELAY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const STORAGE_KEY = 'pwa-install-prompt-dismissed';
 
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -20,17 +15,9 @@ export function PWAInstallPrompt() {
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches;
     if (isInstalled) return;
 
-    // Check if user has dismissed the prompt recently
-    const lastPromptTime = localStorage.getItem(STORAGE_KEYS.LAST_PROMPT_TIME);
-    const isDismissed = sessionStorage.getItem(STORAGE_KEYS.INSTALL_PROMPT_DISMISSED) === 'true';
-    
+    // Check if user has dismissed the prompt in this session
+    const isDismissed = sessionStorage.getItem(STORAGE_KEY) === 'true';
     if (isDismissed) return;
-
-    // If there's a last prompt time, check if enough time has passed
-    if (lastPromptTime) {
-      const timeSinceLastPrompt = Date.now() - parseInt(lastPromptTime);
-      if (timeSinceLastPrompt < PROMPT_DELAY) return;
-    }
 
     const handler = (e: Event) => {
       // Prevent Chrome 67 and earlier from automatically showing the prompt
@@ -60,9 +47,8 @@ export function PWAInstallPrompt() {
 
       if (outcome === 'accepted') {
         console.log('User accepted the install prompt');
-        // Clear all storage since the app is now installed
-        sessionStorage.removeItem(STORAGE_KEYS.INSTALL_PROMPT_DISMISSED);
-        localStorage.removeItem(STORAGE_KEYS.LAST_PROMPT_TIME);
+        // Clear session storage since the app is now installed
+        sessionStorage.removeItem(STORAGE_KEY);
       } else {
         console.log('User dismissed the install prompt');
         handleDismiss();
@@ -77,10 +63,8 @@ export function PWAInstallPrompt() {
   };
 
   const handleDismiss = () => {
-    // Store dismissal in session storage (cleared when browser is closed)
-    sessionStorage.setItem(STORAGE_KEYS.INSTALL_PROMPT_DISMISSED, 'true');
-    // Store last prompt time in local storage (persists across sessions)
-    localStorage.setItem(STORAGE_KEYS.LAST_PROMPT_TIME, Date.now().toString());
+    // Store dismissal only in session storage (cleared when browser is closed)
+    sessionStorage.setItem(STORAGE_KEY, 'true');
     setShowPrompt(false);
   };
 
